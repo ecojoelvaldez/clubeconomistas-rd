@@ -348,6 +348,21 @@
   .varselect-menu button.on { color: var(--ce-ink); box-shadow: inset 2px 0 0 var(--ce-gold); }
   .vs-check { flex-shrink: 0; color: var(--ce-gold-dim); }
 
+  /* Editor del sitio (admin) */
+  .editor-note { border: 1px solid var(--oro-20); background: var(--oro-12); padding: 14px 16px; font-family: var(--ce-body); color: var(--azul-70); line-height: 1.55; margin-bottom: 18px; }
+  .editor-note b { font-family: var(--ce-ui); color: var(--ce-ink); }
+  .editor-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 22px; }
+  .editor-group { border: 1px solid var(--linea); background: var(--ce-paper); margin-bottom: 14px; }
+  .editor-group > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; font-size: 11.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ce-ink); }
+  .editor-group > summary::-webkit-details-marker { display: none; }
+  .editor-group > summary::after { content: "+"; font-family: var(--ce-body); font-size: 19px; line-height: 1; color: var(--ce-gold-dim); }
+  .editor-group[open] > summary::after { content: "–"; }
+  .editor-group[open] > summary { border-bottom: 1px solid var(--linea); }
+  .editor-group-body { padding: 18px; }
+  .editor-sub { font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ce-gold-dim); margin: 16px 0 10px; }
+  .editor-group-body .editor-sub:first-child { margin-top: 0; }
+  .field input[type="color"] { height: 44px; padding: 4px 6px; cursor: pointer; }
+
   /* ===== ESTADÍSTICAS ===== */
   .stats-layout { display: grid; grid-template-columns: 290px 1fr; gap: 0; border: 1px solid var(--linea); overflow: hidden; margin-top: 8px; }
   @media (max-width: 880px){ .stats-layout { grid-template-columns: 1fr; } }
@@ -772,6 +787,25 @@ const db = {
     }
     return { ok: true };
   },
+  // Contenido editable del sitio (Editor del sitio en Admin)
+  async getSiteContent() {
+    if (!SB) return null;
+    try {
+      const { data, error } = await SB.from("club_site_content").select("content").eq("key", "site").maybeSingle();
+      if (error || !data) return null;
+      return data.content || null;
+    } catch (err) { return null; }
+  },
+  async saveSiteContent(content) {
+    if (!SB) return { ok: false, offline: true };
+    try {
+      const { data: auth } = await SB.auth.getUser();
+      if (!auth?.user) return { ok: false, msg: "Se necesita sesión Supabase para publicar para todos" };
+      const { error } = await SB.from("club_site_content").upsert({ key: "site", content, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) return { ok: false, msg: error.message };
+      return { ok: true };
+    } catch (err) { return { ok: false, msg: String(err && err.message || err) }; }
+  },
   // Auth
   async signIn(email, password) {
     if (!SB) return { ok: false, msg: "Backend no configurado" };
@@ -1103,7 +1137,7 @@ function Panel({ num, id, title, lead, children, defaultOpen=false }) {
 
 /* ============================== MASTHEAD + NAV ============================== */
 
-function Nav({ active, go, subview }) {
+function Nav({ active, go, subview, content }) {
   const [scrolled, setScrolled] = useState(false);
   const [openGroup, setOpenGroup] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -1122,6 +1156,7 @@ function Nav({ active, go, subview }) {
     return () => { window.removeEventListener("keydown", onKey); document.body.classList.remove("drawer-locked"); };
   }, [drawerOpen]);
   const today = useMemo(() => new Date().toLocaleDateString("es-DO", { day: "numeric", month: "long", year: "numeric" }), []);
+  const mast = (content && content.masthead) || {};
   const closeDrawer = () => { setDrawerOpen(false); setDrawerExpanded(null); };
   const drawerMain = (g) => {
     if (g.items) { setDrawerExpanded(drawerExpanded === g.id ? null : g.id); }
@@ -1155,16 +1190,16 @@ function Nav({ active, go, subview }) {
       <header className="masthead">
         <div className="wrap">
           <div className="mast-meta">
-            <span>Santo Domingo, R. D.</span>
+            <span>{mast.ciudad || "Santo Domingo, R. D."}</span>
             <span aria-hidden="true">·</span>
             <span>{today}</span>
             <span aria-hidden="true">·</span>
-            <span>Fundado MMXXV</span>
+            <span>{mast.fundado || "Fundado MMXXV"}</span>
           </div>
           <a href="#inicio" className="mast-title" onClick={(e)=>{e.preventDefault();setOpenGroup(null);go("inicio");}}>
             <img className="mast-logo" src={LOGO_CE} alt="Monograma del Club Economistas" />
-            <span className="mast-kicker">Comunidad · Datos · Investigación · Formación</span>
-            <span className="mast-name">Club Economistas Dominicanos</span>
+            <span className="mast-kicker">{mast.kicker || "Comunidad · Datos · Investigación · Formación"}</span>
+            <span className="mast-name">{mast.nombre || "Club Economistas Dominicanos"}</span>
           </a>
         </div>
       </header>
@@ -1172,7 +1207,7 @@ function Nav({ active, go, subview }) {
         <div className="wrap mastnav-inner">
           <a href="#inicio" className="mastnav-brand" onClick={(e)=>{e.preventDefault();setOpenGroup(null);go("inicio");}} tabIndex={scrolled ? 0 : -1}>
             <img className="monogram-img" src={LOGO_CE} alt="" />
-            <span className="mastnav-word">Club Economistas</span>
+            <span className="mastnav-word">{mast.marcaNav || "Club Economistas"}</span>
           </a>
           <div className="mnav-links">
             {groups.map(g => (
@@ -1293,15 +1328,18 @@ function SlideCanvas({ type }) {
 }
 
 /* El único vidrio del sitio. No importar en ningún otro lugar. */
-function GlassPanel({ go }) {
-  const items = [
-    { k: "Investigación", t: "Transmisión de la TPM a las tasas activas según tipo de EIF", goTo: "investigacion" },
-    { k: "Datos", t: "57 series económicas con identificador permanente y API", goTo: "estadisticas" },
-    { k: "Formación", t: "Rutas MMXXVI: FMI, MITx, CFA y econometría aplicada", goTo: "formacion" }
-  ];
+const GLASS_DEFAULTS = [
+  { k: "Investigación", t: "Transmisión de la TPM a las tasas activas según tipo de EIF", goTo: "investigacion" },
+  { k: "Datos", t: "57 series económicas con identificador permanente y API", goTo: "estadisticas" },
+  { k: "Formación", t: "Rutas MMXXVI: FMI, MITx, CFA y econometría aplicada", goTo: "formacion" }
+];
+function GlassPanel({ go, content }) {
+  const ov = (content && content.hero && content.hero.glass) || [];
+  const items = GLASS_DEFAULTS.map((it, i) => ({ ...it, ...(ov[i] || {}) }));
+  const title = (content && content.hero && content.hero.glassTitle) || "En esta edición";
   return (
     <div className="glass-panel">
-      <h3>En esta edición</h3>
+      <h3>{title}</h3>
       {items.map(it => (
         <a key={it.goTo} className="glass-item" href={`#${it.goTo}`} onClick={(e)=>{e.preventDefault();go(it.goTo);}}>
           <span className="gi-k">{it.k}</span>
@@ -1351,12 +1389,28 @@ const HERO_SLIDES = [
   }
 ];
 
-function Hero({ go }) {
+function Hero({ go, content }) {
   const reduced = useMemo(() => typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const total = HERO_SLIDES.length;
   const goSlide = (i) => setIdx(((i % total) + total) % total);
+
+  // Superpone el contenido editado desde Admin sobre los slides base.
+  const ovSlides = (content && content.hero && content.hero.slides) || [];
+  const slides = HERO_SLIDES.map((sl, i) => {
+    const o = ovSlides[i] || {};
+    return {
+      ...sl,
+      eyebrow: o.eyebrow || sl.eyebrow,
+      titleA: o.titleA != null && o.titleA !== "" ? o.titleA : sl.titleA,
+      titleIt: o.titleIt != null ? o.titleIt : sl.titleIt,
+      titleB: o.titleB != null ? o.titleB : sl.titleB,
+      sub: o.sub || sl.sub,
+      cta: { ...sl.cta, label: o.ctaLabel || sl.cta.label },
+      cta2: sl.cta2 ? { ...sl.cta2, label: o.cta2Label || sl.cta2.label } : null
+    };
+  });
 
   // El avance lo dispara el fin de la animación de la barra de progreso (7s),
   // así el indicador y el autoplay no pueden desincronizarse.
@@ -1380,7 +1434,7 @@ function Hero({ go }) {
         onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}
         onKeyDown={onKey}
       >
-        {HERO_SLIDES.map((sl, i) => (
+        {slides.map((sl, i) => (
           <div key={sl.id} className={`slide ${i === idx ? "on" : ""}`} aria-hidden={i !== idx}>
             <SlideCanvas type={sl.type} />
             <div className="wrap">
@@ -1399,7 +1453,7 @@ function Hero({ go }) {
         <div className="hero-foot">
           <div className="wrap">
             <div className="hero-progress" role="tablist" aria-label="Diapositivas de portada">
-              {HERO_SLIDES.map((sl, i) => (
+              {slides.map((sl, i) => (
                 <button key={sl.id} className={`hp-item ${i === idx ? "on" : ""}`} role="tab" aria-selected={i === idx} aria-label={sl.tab} onClick={() => goSlide(i)}>
                   <span className="hp-bar"><i onAnimationEnd={onFill}></i></span>
                   <span className="hp-label num">{sl.tab}</span>
@@ -1409,18 +1463,20 @@ function Hero({ go }) {
           </div>
         </div>
         <aside className="hero-glass">
-          <GlassPanel go={go} />
+          <GlassPanel go={go} content={content} />
         </aside>
-        <p className="visually-hidden" aria-live="polite">{`Diapositiva ${idx + 1} de ${total}: ${HERO_SLIDES[idx].eyebrow}`}</p>
+        <p className="visually-hidden" aria-live="polite">{`Diapositiva ${idx + 1} de ${total}: ${slides[idx].eyebrow}`}</p>
       </section>
-      <Ticker />
+      <Ticker content={content} />
     </React.Fragment>
   );
 }
 
 /* ============================== TICKER DE INDICADORES ============================== */
-function Ticker() {
-  const items = SERIES.map(s => ({ name: s.title, val: s.last, delta: s.delta, dir: s.dir, unit: s.unit }));
+function Ticker({ content }) {
+  const conf = (content && content.ticker) || {};
+  const base = (conf.items && conf.items.length) ? conf.items : SERIES.map(s => ({ name: s.title, val: s.last, delta: s.delta }));
+  const items = base.map(it => ({ ...it, dir: String(it.delta || "").trim().startsWith("-") ? "down" : "up" }));
   const seg = (k) => (
     <div className="ticker-seg" key={k} aria-hidden={k === 1 ? "true" : undefined}>
       {items.map(it => (
@@ -1434,7 +1490,7 @@ function Ticker() {
   );
   return (
     <div className="ticker" aria-label="Indicadores económicos recientes">
-      <span className="ticker-tag">Indicadores</span>
+      <span className="ticker-tag">{conf.tag || "Indicadores"}</span>
       <div className="ticker-track-wrap">
         <div className="ticker-track">{seg(0)}{seg(1)}</div>
       </div>
@@ -2047,8 +2103,8 @@ function AdminPaperForm({ toast, onAddPaper }) {
 }
 
 /* ============================== PANEL ADMIN ============================== */
-function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, onAddPaper=null, papers=[] }) {
-  const [tab, setTab] = useState("cola");
+function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, content=null, onContentChange=null, onAddPaper=null, papers=[] }) {
+  const [tab, setTab] = useState(content ? "sitio" : "cola");
   const [busy, setBusy] = useState(null);
   const [adminPapers, setAdminPapers] = useState(papers);
 
@@ -2107,12 +2163,15 @@ function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, onAddP
   return (
     <div>
       <div className="admin-tabs">
+        {content && <button className={`admin-tab ${tab==="sitio"?"on":""}`} onClick={()=>setTab("sitio")}>Editor del sitio</button>}
         <button className={`admin-tab ${tab==="cola"?"on":""}`} onClick={()=>setTab("cola")}>Cola de aprobación <span className="count">{pending}</span></button>
         <button className={`admin-tab ${tab==="empleos"?"on":""}`} onClick={()=>setTab("empleos")}>Empleos <span className="count">{pendingJobs}</span></button>
         <button className={`admin-tab ${tab==="papers"?"on":""}`} onClick={()=>setTab("papers")}>Investigación <span className="count">{adminPapers.length}</span></button>
         <button className={`admin-tab ${tab==="audit"?"on":""}`} onClick={()=>setTab("audit")}>Registro de auditoría</button>
         <button className="admin-tab" style={{marginLeft:"auto"}} onClick={onLogout}>Cerrar sesión</button>
       </div>
+
+      {tab==="sitio" && content && <SiteEditor content={content} onChange={onContentChange} toast={toast} />}
 
       {tab==="cola" && (
         <div className="queue">
@@ -2695,22 +2754,253 @@ const VIEWS = {
   }
 };
 
-function SectionMenu({ go }) {
-  const cards = [
-    ["estadisticas", VIEWS.estadisticas],
-    ["investigacion", VIEWS.investigacion],
-    ["blog", VIEWS.blog],
-    ["formacion", VIEWS.formacion],
-    ["noticias", VIEWS.noticias],
-    ["club", VIEWS.club]
-  ];
+/* ============================== CONTENIDO EDITABLE DEL SITIO ============================== */
+// Acceso local de emergencia mientras Supabase no está disponible.
+// Es un candado de cortesía en el cliente: no protege datos, solo la UI.
+const LOCAL_ADMIN_USER = "clubeconomistas@";
+const LOCAL_ADMIN_PASS = "ceterisparibus1776";
+
+const CONTENT_KEY = "ce_site_content_v1";
+
+const DEFAULT_CONTENT = {
+  masthead: {
+    ciudad: "Santo Domingo, R. D.",
+    fundado: "Fundado MMXXV",
+    kicker: "Comunidad · Datos · Investigación · Formación",
+    nombre: "Club Economistas Dominicanos",
+    marcaNav: "Club Economistas"
+  },
+  hero: {
+    slides: HERO_SLIDES.map(sl => ({
+      eyebrow: sl.eyebrow, titleA: sl.titleA, titleIt: sl.titleIt, titleB: sl.titleB,
+      sub: sl.sub, ctaLabel: sl.cta.label, cta2Label: sl.cta2 ? sl.cta2.label : ""
+    })),
+    glassTitle: "En esta edición",
+    glass: GLASS_DEFAULTS.map(g => ({ k: g.k, t: g.t }))
+  },
+  ticker: {
+    tag: "Indicadores",
+    items: SERIES.map(s => ({ name: s.title, val: s.last, delta: s.delta }))
+  },
+  home: { menuTitle: "Elige el área que quieres explorar." },
+  views: Object.fromEntries(Object.entries(VIEWS).map(([k, v]) => [k, { kicker: v.kicker, title: v.title, lead: v.lead }])),
+  footer: {
+    descripcion: "Infraestructura de información económica reproducible para la República Dominicana.",
+    credito: "Joel Valdez"
+  },
+  theme: { oro: "#C2A356", tinta: "#0E1626", navy: "#0B1526", crema: "#F7F4EC" }
+};
+
+function loadLocalContent() {
+  try {
+    const raw = localStorage.getItem(CONTENT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (err) { return null; }
+}
+
+function deepMerge(base, over) {
+  if (over === undefined || over === null) return base;
+  if (Array.isArray(base) && Array.isArray(over)) {
+    return base.map((item, i) => (i < over.length ? deepMerge(item, over[i]) : item)).concat(over.slice(base.length));
+  }
+  if (base && over && typeof base === "object" && typeof over === "object" && !Array.isArray(base) && !Array.isArray(over)) {
+    const out = { ...base };
+    Object.keys(over).forEach(k => { out[k] = k in base ? deepMerge(base[k], over[k]) : over[k]; });
+    return out;
+  }
+  return over;
+}
+
+function getDeep(obj, path) { return path.split(".").reduce((a, k) => (a == null ? a : a[k]), obj); }
+
+function setDeep(obj, path, value) {
+  const keys = path.split(".");
+  const clone = Array.isArray(obj) ? obj.slice() : { ...obj };
+  let cur = clone;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const k = keys[i];
+    const next = cur[k];
+    cur[k] = Array.isArray(next) ? next.slice() : { ...(next || {}) };
+    cur = cur[k];
+  }
+  cur[keys[keys.length - 1]] = value;
+  return clone;
+}
+
+function EField({ content, set, label, path, area = false, type = "text", full = false }) {
+  const val = getDeep(content, path);
+  return (
+    <div className={`field ${full || area ? "full" : ""}`}>
+      <label>{label}</label>
+      {area
+        ? <textarea style={{ minHeight: 84 }} value={val || ""} onChange={e => set(path, e.target.value)} />
+        : <input type={type} value={val || ""} onChange={e => set(path, e.target.value)} />}
+    </div>
+  );
+}
+
+/* Editor del sitio: modifica el front end en vivo desde Admin */
+function SiteEditor({ content, onChange, toast }) {
+  const fileRef = useRef(null);
+  const set = (path, value) => onChange(prev => setDeep(prev, path, value));
+
+  const publish = async () => {
+    const res = await db.saveSiteContent(content);
+    if (res.ok) toast("Contenido publicado para todos los visitantes");
+    else if (res.offline) toast("Supabase no disponible: los cambios quedan en este navegador");
+    else toast(res.msg || "No se pudo publicar; los cambios siguen en este navegador");
+  };
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ce-contenido-sitio.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const importJson = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        onChange(deepMerge(DEFAULT_CONTENT, JSON.parse(reader.result)));
+        toast("Contenido importado");
+      } catch (err) { toast("El archivo no es un JSON válido"); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+  const restore = () => {
+    onChange(JSON.parse(JSON.stringify(DEFAULT_CONTENT)));
+    toast("Contenido restaurado al original");
+  };
+
+  return (
+    <div>
+      <div className="editor-note"><b>Edición en vivo.</b> Cada cambio se aplica al momento y queda guardado en este navegador. «Publicar para todos» lo comparte con cada visitante cuando Supabase está disponible; mientras tanto, exporta el JSON para conservar o desplegar los cambios.</div>
+      <div className="editor-actions">
+        <button className="btn btn-primary" onClick={publish}>Publicar para todos</button>
+        <button className="chip" onClick={exportJson}>Exportar JSON</button>
+        <button className="chip" onClick={() => fileRef.current && fileRef.current.click()}>Importar JSON</button>
+        <button className="chip" onClick={restore}>Restaurar original</button>
+        <input ref={fileRef} type="file" accept="application/json" style={{ display: "none" }} onChange={importJson} />
+      </div>
+
+      <details className="editor-group" open>
+        <summary>Identidad · masthead</summary>
+        <div className="editor-group-body form-grid">
+          <EField content={content} set={set} label="Ciudad" path="masthead.ciudad" />
+          <EField content={content} set={set} label="Lema de fundación" path="masthead.fundado" />
+          <EField content={content} set={set} label="Kicker (línea dorada)" path="masthead.kicker" full />
+          <EField content={content} set={set} label="Nombre del club" path="masthead.nombre" />
+          <EField content={content} set={set} label="Marca en la barra fija" path="masthead.marcaNav" />
+        </div>
+      </details>
+
+      <details className="editor-group">
+        <summary>Portada · slides</summary>
+        <div className="editor-group-body">
+          {content.hero.slides.map((sl, i) => (
+            <div key={i}>
+              <div className="editor-sub">{`Slide 0${i + 1}`}</div>
+              <div className="form-grid">
+                <EField content={content} set={set} label="Eyebrow" path={`hero.slides.${i}.eyebrow`} />
+                <EField content={content} set={set} label="Botón principal" path={`hero.slides.${i}.ctaLabel`} />
+                <EField content={content} set={set} label="Titular · inicio" path={`hero.slides.${i}.titleA`} />
+                <EField content={content} set={set} label="Titular · parte en itálica" path={`hero.slides.${i}.titleIt`} />
+                <EField content={content} set={set} label="Bajada" path={`hero.slides.${i}.sub`} area />
+                <EField content={content} set={set} label="Botón secundario" path={`hero.slides.${i}.cta2Label`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <details className="editor-group">
+        <summary>Portada · «En esta edición»</summary>
+        <div className="editor-group-body form-grid">
+          <EField content={content} set={set} label="Título del panel" path="hero.glassTitle" full />
+          {content.hero.glass.map((g, i) => (
+            <React.Fragment key={i}>
+              <EField content={content} set={set} label={`Entrada ${i + 1} · etiqueta`} path={`hero.glass.${i}.k`} />
+              <EField content={content} set={set} label={`Entrada ${i + 1} · texto`} path={`hero.glass.${i}.t`} />
+            </React.Fragment>
+          ))}
+        </div>
+      </details>
+
+      <details className="editor-group">
+        <summary>Ticker de indicadores</summary>
+        <div className="editor-group-body form-grid">
+          <EField content={content} set={set} label="Etiqueta fija" path="ticker.tag" full />
+          {content.ticker.items.map((it, i) => (
+            <React.Fragment key={i}>
+              <EField content={content} set={set} label={`Indicador ${i + 1} · nombre`} path={`ticker.items.${i}.name`} />
+              <div className="field">
+                <label>{`Indicador ${i + 1} · valor y variación`}</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <input value={it.val || ""} onChange={e => set(`ticker.items.${i}.val`, e.target.value)} />
+                  <input value={it.delta || ""} onChange={e => set(`ticker.items.${i}.delta`, e.target.value)} />
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      </details>
+
+      <details className="editor-group">
+        <summary>Secciones · títulos y descripciones</summary>
+        <div className="editor-group-body">
+          <div className="form-grid">
+            <EField content={content} set={set} label="Título del menú de la home" path="home.menuTitle" full />
+          </div>
+          {Object.keys(content.views).map(key => (
+            <div key={key}>
+              <div className="editor-sub">{key}</div>
+              <div className="form-grid">
+                <EField content={content} set={set} label="Kicker" path={`views.${key}.kicker`} />
+                <EField content={content} set={set} label="Título" path={`views.${key}.title`} />
+                <EField content={content} set={set} label="Descripción" path={`views.${key}.lead`} area />
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <details className="editor-group">
+        <summary>Pie de página</summary>
+        <div className="editor-group-body form-grid">
+          <EField content={content} set={set} label="Descripción institucional" path="footer.descripcion" area />
+          <EField content={content} set={set} label="Crédito de diseño" path="footer.credito" />
+        </div>
+      </details>
+
+      <details className="editor-group">
+        <summary>Tema · colores del sistema</summary>
+        <div className="editor-group-body form-grid">
+          <EField content={content} set={set} label="Oro (acento)" path="theme.oro" type="color" />
+          <EField content={content} set={set} label="Tinta (texto y botones)" path="theme.tinta" type="color" />
+          <EField content={content} set={set} label="Navy profundo (portada y pie)" path="theme.navy" type="color" />
+          <EField content={content} set={set} label="Crema (superficies)" path="theme.crema" type="color" />
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function SectionMenu({ go, content }) {
+  const ov = (content && content.views) || {};
+  const cards = ["estadisticas", "investigacion", "blog", "formacion", "noticias", "club"]
+    .map(id => [id, { ...VIEWS[id], ...(ov[id] || {}) }]);
   return (
     <section className="section-menu">
       <div className="wrap">
         <div className="section-menu-head">
           <div>
             <span className="section-kicker">Club Economistas</span>
-            <h2>Elige el área que quieres explorar.</h2>
+            <h2>{(content && content.home && content.home.menuTitle) || "Elige el área que quieres explorar."}</h2>
           </div>
         </div>
         <div className="section-grid">
@@ -2734,8 +3024,8 @@ function SectionMenu({ go }) {
   );
 }
 
-function SectionView({ view, children }) {
-  const v = VIEWS[view];
+function SectionView({ view, content, children }) {
+  const v = { ...VIEWS[view], ...(((content && content.views) || {})[view] || {}) };
   const isAdmin = view === "admin";
   return (
     <section className={`view-shell ${isAdmin?"admin-shell":""}`} id={view}>
@@ -2761,6 +3051,13 @@ function AdminGate({ onLogin, toast }) {
 
   const enter = async () => {
     setErr(""); setBusy(true);
+    // Acceso local de emergencia mientras Supabase no está disponible.
+    if (email.trim().toLowerCase() === LOCAL_ADMIN_USER && pass === LOCAL_ADMIN_PASS) {
+      try { localStorage.setItem("ce_local_admin", "1"); } catch (err) {}
+      setBusy(false);
+      onLogin();
+      return;
+    }
     const res = await db.signIn(email.trim(), pass);
     setBusy(false);
     if (res.ok) { onLogin(); }
@@ -2784,14 +3081,15 @@ function AdminGate({ onLogin, toast }) {
 }
 
 /* ============================== FOOTER ============================== */
-function Footer({ go }) {
+function Footer({ go, content }) {
+  const f = (content && content.footer) || {};
   return (
     <footer className="footer">
       <div className="wrap">
         <div className="footer-grid">
           <div className="footer-brand">
             <div className="wordmark"><img src={LOGO_FOOTER} alt="" /> Club <span>Economistas</span></div>
-            <p>Infraestructura de información económica reproducible para la República Dominicana.</p>
+            <p>{f.descripcion || "Infraestructura de información económica reproducible para la República Dominicana."}</p>
           </div>
           <div className="footer-col">
             <h5>Datos</h5>
@@ -2813,7 +3111,7 @@ function Footer({ go }) {
         <div className="footer-bottom">
           <span>© 2026 Club Economistas · República Dominicana</span>
           <span className="footer-social"><a href="https://instagram.com/clubeconomistasrd" target="_blank" rel="noreferrer">Instagram</a> · <a href="https://x.com/clubeconomistas" target="_blank" rel="noreferrer">X</a> · <a href="https://linkedin.com/company/ClubEconomistasRD" target="_blank" rel="noreferrer">LinkedIn</a></span>
-          <span className="credit">Plataforma diseñada por <b>Joel Valdez</b></span>
+          <span className="credit">Plataforma diseñada por <b>{f.credito || "Joel Valdez"}</b></span>
         </div>
       </div>
     </footer>
@@ -2824,6 +3122,29 @@ function Footer({ go }) {
 function App() {
   const [active, setActive] = useState("inicio");
   const [subview, setSubview] = useState({ estadisticas:"BCRD", blog:"Blogstop", noticias:"Noticias económicas", club:"Organigrama" });
+  const [content, setContentState] = useState(() => deepMerge(DEFAULT_CONTENT, loadLocalContent() || {}));
+  const setContent = React.useCallback((updater) => {
+    setContentState(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      try { localStorage.setItem(CONTENT_KEY, JSON.stringify(next)); } catch (err) {}
+      return next;
+    });
+  }, []);
+
+  // Tema editable: los tokens se aplican en vivo sobre :root.
+  useEffect(() => {
+    const t = content.theme || {};
+    const r = document.documentElement.style;
+    const map = { "--ce-gold": t.oro, "--ce-ink": t.tinta, "--ce-navy-deep": t.navy, "--ce-cream": t.crema };
+    Object.keys(map).forEach(k => { if (map[k]) r.setProperty(k, map[k]); });
+  }, [content.theme]);
+
+  // Contenido compartido si Supabase responde; lo editado localmente gana en este navegador.
+  useEffect(() => {
+    db.getSiteContent().then(shared => {
+      if (shared && !loadLocalContent()) setContentState(deepMerge(DEFAULT_CONTENT, shared));
+    }).catch(() => {});
+  }, []);
   const [logged, setLogged] = useState(false);
   const [queue, setQueue] = useState([]);
   const [jobQueue, setJobQueue] = useState([]);
@@ -2855,8 +3176,9 @@ function App() {
     return () => { alive = false; };
   }, []);
 
-  // Detectar sesión admin existente al montar
+  // Detectar sesión admin existente al montar (Supabase o acceso local)
   useEffect(() => {
+    try { if (localStorage.getItem("ce_local_admin") === "1") setLogged(true); } catch (err) {}
     db.currentSession().then(s => { if (s) setLogged(true); });
   }, []);
 
@@ -2895,26 +3217,26 @@ function App() {
     if (active === "inicio") {
       return (
         <React.Fragment>
-          <Hero go={go} />
-          <SectionMenu go={go} />
+          <Hero go={go} content={content} />
+          <SectionMenu go={go} content={content} />
         </React.Fragment>
       );
     }
-    if (active === "estadisticas") return <SectionView view="estadisticas"><StatsBody toast={toast} initialInstitution={subview.estadisticas} onSubChange={(sub)=>setSub("estadisticas", sub)} /></SectionView>;
-    if (active === "investigacion") return <SectionView view="investigacion"><ResearchPapersBody toast={toast} onSubmit={addSubmission} repo={repo} /></SectionView>;
-    if (active === "blog") return <SectionView view="blog"><BlogBody toast={toast} onSubmit={addSubmission} initialMode={subview.blog} onSubChange={(sub)=>setSub("blog", sub)} /></SectionView>;
-    if (active === "formacion") return <SectionView view="formacion"><FormationBody /></SectionView>;
-    if (active === "noticias") return <SectionView view="noticias"><NewsBody toast={toast} logged={logged} initialMode={subview.noticias} onSubChange={(sub)=>setSub("noticias", sub)} onJobsChanged={refreshAdmin} /></SectionView>;
-    if (active === "club") return <SectionView view="club"><ClubBody initialSection={subview.club} onSubChange={(sub)=>setSub("club", sub)} /></SectionView>;
-    if (active === "admin") return <SectionView view="admin">{logged ? <AdminBody toast={toast} queue={queue} jobQueue={jobQueue} audit={audit} refresh={refreshAdmin} onLogout={()=>{db.signOut().then(()=>{setLogged(false); setQueue([]); setJobQueue([]); setAudit([]); toast("Sesión cerrada");});}} /> : <AdminGate toast={toast} onLogin={()=>{setLogged(true); toast("Sesión admin iniciada");}} />}</SectionView>;
+    if (active === "estadisticas") return <SectionView view="estadisticas" content={content}><StatsBody toast={toast} initialInstitution={subview.estadisticas} onSubChange={(sub)=>setSub("estadisticas", sub)} /></SectionView>;
+    if (active === "investigacion") return <SectionView view="investigacion" content={content}><ResearchPapersBody toast={toast} onSubmit={addSubmission} repo={repo} /></SectionView>;
+    if (active === "blog") return <SectionView view="blog" content={content}><BlogBody toast={toast} onSubmit={addSubmission} initialMode={subview.blog} onSubChange={(sub)=>setSub("blog", sub)} /></SectionView>;
+    if (active === "formacion") return <SectionView view="formacion" content={content}><FormationBody /></SectionView>;
+    if (active === "noticias") return <SectionView view="noticias" content={content}><NewsBody toast={toast} logged={logged} initialMode={subview.noticias} onSubChange={(sub)=>setSub("noticias", sub)} onJobsChanged={refreshAdmin} /></SectionView>;
+    if (active === "club") return <SectionView view="club" content={content}><ClubBody initialSection={subview.club} onSubChange={(sub)=>setSub("club", sub)} /></SectionView>;
+    if (active === "admin") return <SectionView view="admin" content={content}>{logged ? <AdminBody toast={toast} queue={queue} jobQueue={jobQueue} audit={audit} refresh={refreshAdmin} content={content} onContentChange={setContent} onLogout={()=>{try{localStorage.removeItem("ce_local_admin");}catch(err){} db.signOut().then(()=>{setLogged(false); setQueue([]); setJobQueue([]); setAudit([]); toast("Sesión cerrada");});}} /> : <AdminGate toast={toast} onLogin={()=>{setLogged(true); toast("Sesión admin iniciada");}} />}</SectionView>;
     return null;
   };
 
   return (
     <React.Fragment>
-      <Nav active={active} go={go} subview={subview} />
+      <Nav active={active} go={go} subview={subview} content={content} />
       <main>{renderView()}</main>
-      <Footer go={go} />
+      <Footer go={go} content={content} />
       {toastMsg && (<div className="toast-wrap"><div className="toast"><span className="ok">✓</span> {toastMsg}</div></div>)}
     </React.Fragment>
   );
