@@ -1779,16 +1779,16 @@ const CURATED = [
     load:{ kind:"yahoo", symbol:"GC=F", range:"5y", interval:"1wk" } },
 
   { key:"sp500", panel:"global", theme:"Mercados y materias primas", title:"S&P 500",
-    freq:"Semanal", unitLabel:"Puntos del índice", fmt:"idx", dec:0, sign:"normal", live:true,
+    freq:"Diaria", unitLabel:"Puntos del índice", fmt:"idx", dec:0, sign:"normal", live:true,
     blurb:"El barómetro de la renta variable mundial. El S&P 500 marca el apetito global por riesgo: cuando sube sostenidamente, mejora el clima para captar inversión extranjera y colocar deuda en condiciones favorables.",
-    src:"Yahoo Finance · S&P 500 (^GSPC)", srcUrl:"https://finance.yahoo.com/quote/%5EGSPC",
-    load:{ kind:"yahoo", symbol:"^GSPC", range:"5y", interval:"1wk" } },
+    src:"FRED · S&P Dow Jones", srcUrl:"https://fred.stlouisfed.org/series/SP500",
+    load:{ kind:"fred", fredId:"SP500" } },
 
   { key:"btc", panel:"global", theme:"Mercados y materias primas", title:"Bitcoin",
-    freq:"Semanal", unitLabel:"US$ por BTC", fmt:"usd", dec:0, sign:"normal", live:true,
+    freq:"Diaria", unitLabel:"US$ por BTC", fmt:"usd", dec:0, sign:"normal", live:true,
     blurb:"El activo de riesgo más volátil del tablero. Bitcoin funciona hoy como un indicador extremo del apetito por riesgo y la liquidez global: se dispara cuando abunda el dinero barato y se desploma cuando se retira.",
-    src:"Yahoo Finance · Bitcoin (BTC-USD)", srcUrl:"https://finance.yahoo.com/quote/BTC-USD",
-    load:{ kind:"yahoo", symbol:"BTC-USD", range:"5y", interval:"1wk" } }
+    src:"FRED · Coinbase (BTC/USD)", srcUrl:"https://fred.stlouisfed.org/series/CBBTCUSD",
+    load:{ kind:"fred", fredId:"CBBTCUSD" } }
 ];
 
 const STAT_PANELS = [
@@ -2746,12 +2746,36 @@ function formatNewsTime(dateValue) {
   return d.toLocaleDateString("es-DO", { day:"2-digit", month:"short", year:"numeric" });
 }
 
+// Cadena de obtención con tolerancia a fallos de CORS:
+//   1) intento directo (funciona si la fuente manda CORS abierto);
+//   2) proxy propio same-origin en Vercel (/api/proxy) — sin CORS ni terceros;
+//   3) varios proxies CORS públicos como último recurso (GitHub Pages, etc.).
+// El orden prioriza fiabilidad; se devuelve el primer cuerpo no vacío.
+const CORS_PROXIES = [
+  (u) => "/api/proxy?url=" + encodeURIComponent(u),
+  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  (u) => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u),
+  (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u)
+];
+
 async function fetchTextWithCors(url) {
-  const direct = () => fetch(url, { cache:"no-store" }).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); });
-  const viaAllOrigins = () => fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(url), { cache:"no-store" }).then(r => { if (!r.ok) throw new Error("Proxy HTTP " + r.status); return r.text(); });
-  try { return await direct(); } catch (directErr) {
-    try { return await viaAllOrigins(); } catch (proxyErr) { throw proxyErr || directErr; }
+  // 1) Directo.
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (r.ok) { const t = await r.text(); if (t) return t; }
+  } catch (e) { /* CORS o red: seguimos con proxies */ }
+  // 2) + 3) Proxies en cascada.
+  let lastErr = null;
+  for (const build of CORS_PROXIES) {
+    try {
+      const r = await fetch(build(url), { cache: "no-store" });
+      if (!r.ok) { lastErr = new Error("Proxy HTTP " + r.status); continue; }
+      const t = await r.text();
+      if (t && t.trim()) return t;
+      lastErr = new Error("Respuesta vacía del proxy");
+    } catch (e) { lastErr = e; }
   }
+  throw lastErr || new Error("No se pudo obtener el recurso");
 }
 
 async function loadNewsFeed(source) {

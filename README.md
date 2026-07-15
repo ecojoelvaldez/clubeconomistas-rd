@@ -22,15 +22,26 @@ formateada (con su unidad real) y enlace a la fuente. Se organiza en dos paneles
   IMAE, PIB nominal, ocupados, inflación subyacente, TPM, tasa activa, tipo de cambio,
   reservas, remesas, cuenta corriente, turismo, deuda/PIB y recaudación DGII.
 - **Global & mercados** (10 indicadores, se cargan **en vivo** desde el navegador):
-  Fed Funds, Treasury 10a, pendiente 10a−2a, inflación de EE.UU. y VIX/dólar/WTI vía
-  **FRED** (`fredgraph.csv`, sin API key); oro, S&P 500 y Bitcoin vía **Yahoo Finance**.
+  Fed Funds, Treasury 10a, pendiente 10a−2a, inflación de EE.UU., WTI, índice del dólar,
+  VIX, S&P 500 y Bitcoin vía **FRED** (`fredgraph.csv`, sin API key); oro vía
+  **Yahoo Finance** (`chart` API).
 
 Cada indicador declara su `load` (`kind: local | fred | yahoo`), su formato (`fmt`),
 su signo semántico (`sign`) y transformaciones opcionales (`scale`, `aggregate`,
 `transform: "yoy"`). Los cargadores viven en `loadLocalPoints` / `loadFredPoints` /
-`loadYahooPoints`; los datos externos usan el mismo proxy CORS (`fetchTextWithCors`)
-que las Noticias, con estados de carga y error si la fuente no responde. Series largas
-se reducen (downsample) a ~220 puntos para render fluido.
+`loadYahooPoints`. Series largas se reducen (downsample) a ~220 puntos.
+
+### Cómo se resuelve el CORS de los datos globales
+FRED y Yahoo no envían cabeceras CORS abiertas, así que el fetch directo falla en el
+navegador. `fetchTextWithCors` (compartido con las Noticias) intenta, en orden:
+1. **directo**;
+2. **`/api/proxy`** — función serverless de Vercel (`api/proxy.js`) que hace la
+   petición desde el servidor (sin CORS) con lista blanca de hosts y cache en el borde;
+3. varios **proxies CORS públicos** (corsproxy.io, codetabs, allorigins) como respaldo
+   para despliegues sin serverless (GitHub Pages).
+
+En Vercel, el paso 2 resuelve todo de forma fiable. Si ninguna vía responde, el
+indicador muestra un estado de error claro en lugar de romperse.
 
 El master crudo sigue disponible en `data/` (57 series) como respaldo del panel
 Dominicana; no se muestra como catálogo.
