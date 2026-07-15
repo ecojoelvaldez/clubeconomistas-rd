@@ -1,5 +1,5 @@
 {
-  "_comment": "Config de la descarga de la API de la SIB (Superintendencia de Bancos). El script scripts/fetch-sib.mjs lee este archivo, llama a cada endpoint con la clave (GitHub secret SIB_API_KEY en la cabecera authHeader) y guarda un snapshot en data/series/<file>.json. Rellena 'path' con el endpoint real de cada indicador y ajusta dateKey/valueKey/scale al formato de la respuesta. Deja 'path' vacío para omitir un indicador.",
+  "_comment": "Config de la descarga de la API de la SIB (Superintendencia de Bancos). El script scripts/fetch-sib.mjs lee este archivo, llama a cada endpoint con la subscription key (GitHub secret SIB_SUBSCRIPTION_KEY en la cabecera authHeader: Ocp-Apim-Subscription-Key) y guarda un snapshot en data/series/<file>.json. Rellena 'path' con el endpoint real de cada indicador y ajusta dateKey/valueKey/scale al formato de la respuesta. Deja 'path' vacío para omitir un indicador.",
   "base": "https://apis.sb.gob.do",
   "authHeader": "Ocp-Apim-Subscription-Key",
   "indicators": [

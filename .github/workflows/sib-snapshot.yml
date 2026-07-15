@@ -29,7 +29,7 @@ jobs:
 
       - name: Descargar indicadores de la SIB
         env:
-          SIB_API_KEY: ${{ secrets.SIB_API_KEY }}
+          SIB_SUBSCRIPTION_KEY: ${{ secrets.SIB_SUBSCRIPTION_KEY }}
         run: node scripts/fetch-sib.mjs
 
       - name: Commitear snapshots si cambiaron

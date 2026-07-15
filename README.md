@@ -41,8 +41,11 @@ API de la Superintendencia de Bancos, que requiere clave. Como un sitio estátic
 puede guardar un secret, la clave vive **solo en GitHub Actions**:
 
 - `.github/workflows/sib-snapshot.yml` corre a diario (y a demanda) usando el secret
-  `SIB_API_KEY`, ejecuta `scripts/fetch-sib.mjs` y commitea los datos a
-  `data/series/sib_*.json`. La clave nunca toca el navegador.
+  `SIB_SUBSCRIPTION_KEY` (subscription key de Azure APIM, cabecera
+  `Ocp-Apim-Subscription-Key`), ejecuta `scripts/fetch-sib.mjs` y commitea los datos a
+  `data/series/sib_*.json`. La clave nunca toca el navegador. El secret debe existir en
+  **este** repositorio (o en la organización con acceso a este repo); un secret que solo
+  vive en otro repo no es visible para esta Action.
 - `scripts/sib-sources.json` es la configuración: endpoint y mapeo de campos de cada
   indicador. **Falta rellenar los `path`** con los endpoints reales de la SIB (y
   confirmar `authHeader` y el nombre del secret).

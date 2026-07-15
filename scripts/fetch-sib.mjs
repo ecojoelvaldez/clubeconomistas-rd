@@ -23,7 +23,8 @@ const ROOT = path.resolve(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "data", "series");
 const CONFIG = JSON.parse(fs.readFileSync(path.join(__dirname, "sib-sources.json"), "utf8"));
 
-const API_KEY = process.env.SIB_API_KEY || "";
+// La clave es una subscription key de Azure API Management (secret SIB_SUBSCRIPTION_KEY).
+const API_KEY = process.env.SIB_SUBSCRIPTION_KEY || process.env.SIB_API_KEY || "";
 const BASE = process.env.SIB_API_BASE || CONFIG.base;
 const AUTH_HEADER = process.env.SIB_AUTH_HEADER || CONFIG.authHeader || "Ocp-Apim-Subscription-Key";
 
@@ -138,7 +139,7 @@ async function fetchIndicator(ind) {
 }
 
 async function main() {
-  if (!API_KEY) console.warn("⚠ SIB_API_KEY no está definido; se intentará sin autenticación (probablemente falle).");
+  if (!API_KEY) console.warn("⚠ SIB_SUBSCRIPTION_KEY no está definido; se intentará sin autenticación (probablemente falle).");
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
   let ok = 0, skipped = 0;
