@@ -1181,7 +1181,7 @@ function Nav({ active, go, subview, content }) {
   const drawerChoose = (id, item) => { closeDrawer(); go(id, item); };
   const groups = [
     { id:"inicio", label:"Inicio" },
-    { id:"estadisticas", label:"Estadísticas", items:["Actividad y crecimiento","Precios y política monetaria","Sector externo","Fiscal y deuda","Tasas y bonos · EE.UU.","Mercados y materias primas"] },
+    { id:"estadisticas", label:"Estadísticas", items:["Actividad y crecimiento","Precios y política monetaria","Sector externo","Fiscal y deuda","Mercado de valores","Tasas y bonos · EE.UU.","Mercados y materias primas"] },
     { id:"investigacion", label:"Investigación" },
     { id:"blog", label:"Blog", items:["Blogstop","Discusiones internacionales"] },
     { id:"formacion", label:"Formación" },
@@ -1729,6 +1729,12 @@ const CURATED = [
     src:"DGII · Recaudación", srcUrl:"https://dgii.gov.do/estadisticas/recaudaciones/Paginas/default.aspx",
     load:{ kind:"local", id:"CE-SER-2026-0049", variable:"monto_recaudado", aggregate:"sum", scale:0.000001 } },
 
+  { key:"mercado_primario", panel:"do", theme:"Mercado de valores", title:"Emisiones de renta fija · RD$",
+    freq:"Mensual", unitLabel:"Millones de RD$ colocados", fmt:"rdM", dec:0, sign:"normal",
+    blurb:"El pulso del mercado de capitales local. El monto colocado cada mes en el mercado primario de renta fija (bonos corporativos y del Estado en pesos, regulado por la SIMV y transado en la BVRD) mide cuánto financiamiento se levanta fuera del crédito bancario tradicional.",
+    src:"SIMV · Mercado primario", srcUrl:"https://simv.gob.do/",
+    load:{ kind:"local", id:"CE-SER-2026-0055", variable:"cantidad_valor_nominal_colocada", where:{ field:"moneda", value:"DOP" }, aggregate:"sum", scale:0.000001 } },
+
   /* ——————————————————————— GLOBAL & MERCADOS (en vivo) ——————————————————————— */
   { key:"fedfunds", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Tasa de la Reserva Federal",
     freq:"Mensual", unitLabel:"% anual (Fed Funds)", fmt:"pct", dec:2, sign:"neutral", live:true,
@@ -1858,12 +1864,13 @@ function axisLabel(t) {
 }
 
 /* ---- Cargadores unificados: master local, FRED y Yahoo Finance ---- */
-async function loadLocalPoints({ id, variable, aggregate }) {
+async function loadLocalPoints({ id, variable, aggregate, where }) {
   const r = await fetch("data/series/" + id + ".json", { cache: "no-store" });
   if (!r.ok) throw new Error("HTTP " + r.status);
   const data = await r.json();
   const rows = (data.observations || [])
     .filter(o => (variable ? o.variable === variable : true))
+    .filter(o => (where ? o[where.field] === where.value : true))
     .filter(o => o.value != null && !isNaN(+o.value));
   if (aggregate === "sum") {
     const m = new Map();
