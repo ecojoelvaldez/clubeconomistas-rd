@@ -389,6 +389,22 @@
   .chart-box { height: 260px; margin-top: 16px; }
   .series-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 
+  /* ===== ESTADÍSTICAS CURADAS ===== */
+  .stat-theme-group { border-bottom: 1px solid var(--linea); }
+  .stat-theme-group:last-child { border-bottom: none; }
+  .stat-theme-label { padding: 14px 20px 6px; font-family: var(--ce-ui); font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ce-gold-dim); }
+  .series-item .reading { margin-top: 6px; font-family: var(--ce-ui); font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--ce-ink); font-variant-numeric: tabular-nums; }
+  .series-item .reading.up { color: var(--verde); } .series-item .reading.down { color: var(--rojo); }
+  .series-item .reading.muted { color: var(--azul-30); font-weight: 500; font-size: 12px; }
+  .series-blurb { font-family: var(--ce-body); color: var(--azul-70); font-size: 14.5px; line-height: 1.6; margin: 14px 0 2px; max-width: 64ch; border-left: 2px solid var(--ce-gold); padding-left: 14px; }
+  .series-source { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; font-size: 12px; color: var(--azul-50); }
+  .series-source a { color: var(--ce-gold-dim); border-bottom: 1px solid var(--oro-20); }
+  .series-source a:hover { color: var(--ce-ink); border-color: var(--ce-ink); }
+  .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ce-gold-dim); border: 1px solid var(--oro-20); padding: 3px 8px; }
+  .live-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ce-gold); box-shadow: 0 0 0 0 rgba(194,163,86,.6); animation: livePulse 2s infinite; }
+  @keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(194,163,86,.55); } 70% { box-shadow: 0 0 0 7px rgba(194,163,86,0); } 100% { box-shadow: 0 0 0 0 rgba(194,163,86,0); } }
+  .kpi .v.big { font-size: 1.95rem; }
+
   /* ===== INVESTIGACIÓN ===== */
   .research-list { display: flex; flex-direction: column; border-top: 1px solid var(--linea); margin-top: 8px; }
   .paper-toolbar { display: grid; grid-template-columns: minmax(240px, 1fr) auto; gap: 12px; align-items: start; margin-bottom: 16px; }
@@ -1165,7 +1181,7 @@ function Nav({ active, go, subview, content }) {
   const drawerChoose = (id, item) => { closeDrawer(); go(id, item); };
   const groups = [
     { id:"inicio", label:"Inicio" },
-    { id:"estadisticas", label:"Estadísticas", items:["BCRD","SIMV","DGII","Hacienda y Economía","BVRD","FRED"] },
+    { id:"estadisticas", label:"Estadísticas", items:["Actividad y crecimiento","Precios y política monetaria","Sector externo","Fiscal y deuda","Tasas y bonos · EE.UU.","Mercados y materias primas"] },
     { id:"investigacion", label:"Investigación" },
     { id:"blog", label:"Blog", items:["Blogstop","Discusiones internacionales"] },
     { id:"formacion", label:"Formación" },
@@ -1330,7 +1346,7 @@ function SlideCanvas({ type }) {
 /* El único vidrio del sitio. No importar en ningún otro lugar. */
 const GLASS_DEFAULTS = [
   { k: "Investigación", t: "Transmisión de la TPM a las tasas activas según tipo de EIF", goTo: "investigacion" },
-  { k: "Datos", t: "57 series económicas con identificador permanente y API", goTo: "estadisticas" },
+  { k: "Datos", t: "Los indicadores que mandan en la economía dominicana, más un tablero global en vivo", goTo: "estadisticas" },
   { k: "Formación", t: "Rutas MMXXVI: FMI, MITx, CFA y econometría aplicada", goTo: "formacion" }
 ];
 function GlassPanel({ go, content }) {
@@ -1371,7 +1387,7 @@ const HERO_SLIDES = [
     titleA: "Series limpias, citables y ",
     titleIt: "reproducibles",
     titleB: ".",
-    sub: "57 series económicas dominicanas con identificador permanente, metadatos y acceso por API. BCRD, Hacienda, DGII y SIMV.",
+    sub: "Una curaduría de los indicadores que de verdad mueven la economía dominicana —BCRD, DGII, Hacienda— más un tablero global en vivo con datos de la FRED y los mercados.",
     cta: { label: "Explorar estadísticas", goTo: "estadisticas" },
     cta2: { label: "Solicitar ingreso", href: "https://forms.gle/VMbb5Gfb1BPRiakj6" }
   },
@@ -1617,226 +1633,476 @@ function VarSelect({ options, value, onChange, label = "Serie" }) {
   );
 }
 
-function StatsBody({ toast, initialInstitution = "BCRD", onSubChange }) {
-  const institutions = ["BCRD", "SIMV", "DGII", "Hacienda y Economía", "BVRD", "FRED"];
-  const [institution, setInstitution] = useState(initialInstitution);
-  useEffect(() => setInstitution(initialInstitution), [initialInstitution]);
+/* ============================== ESTADÍSTICAS (curaduría) ============================== */
+// La sección no expone el master crudo (57 CSV → JSON) como un catálogo plano.
+// Presenta una CURADURÍA: pocos indicadores —los que de verdad mueven la economía
+// dominicana— más un tablero GLOBAL (FRED + mercados) que se carga en vivo desde el
+// navegador. Cada indicador trae contexto editorial, una lectura formateada con su
+// unidad real y el enlace a la fuente. No es un volcado de datos: es lo que importa.
+//
+// Modelo de cada indicador:
+//   panel:  "do" (Dominicana) | "global"
+//   theme:  agrupador editorial
+//   fmt:    "pct" | "usd" | "usdM" | "rd" | "rdM" | "persons" | "idx"
+//   sign:   "normal" (subir = bueno/verde) | "invert" (subir = malo/rojo) | "neutral"
+//   load:   { kind:"local", id, variable, aggregate?, scale?, transform?, lag? }
+//         | { kind:"fred", fredId, scale?, transform?, lag?, interval? }
+//         | { kind:"yahoo", symbol, range?, interval?, scale? }
 
+const CURATED = [
+  /* ——————————————————————— DOMINICANA ——————————————————————— */
+  { key:"imae", panel:"do", theme:"Actividad y crecimiento", title:"Actividad económica · IMAE",
+    freq:"Mensual", unitLabel:"Variación % interanual", fmt:"pct", dec:1, sign:"normal",
+    blurb:"El termómetro de más alta frecuencia de la economía real. El IMAE anticipa el rumbo del PIB meses antes de las cuentas nacionales: cuando acelera, el crédito, el empleo y la recaudación tienden a seguir.",
+    src:"BCRD · Sector real", srcUrl:"https://www.bancentral.gov.do/a/d/2537-sector-real",
+    load:{ kind:"local", id:"CE-SER-2026-0017", variable:"Serie Original | Variación porcentual (%) | Interanual" } },
+
+  { key:"pib_usd", panel:"do", theme:"Actividad y crecimiento", title:"Tamaño de la economía · PIB nominal",
+    freq:"Anual", unitLabel:"PIB corriente en millones de US$", fmt:"usdM", dec:0, sign:"normal",
+    blurb:"El tamaño absoluto de la economía en dólares. Es la vara con la que se miden la deuda, el gasto y la inversión: todo ratio de política pública (deuda/PIB, presión tributaria) se lee contra esta cifra.",
+    src:"BCRD · Cuentas nacionales", srcUrl:"https://www.bancentral.gov.do/a/d/2533-sector-real",
+    load:{ kind:"local", id:"CE-SER-2026-0040", variable:"PIB Corriente (Millones de US$)" } },
+
+  { key:"ocupados", panel:"do", theme:"Actividad y crecimiento", title:"Ocupados totales",
+    freq:"Trimestral", unitLabel:"Personas ocupadas", fmt:"persons", dec:0, sign:"normal",
+    blurb:"Cuánta gente trabaja en el país. El nivel de ocupación es el vínculo directo entre el crecimiento y el bienestar de los hogares; su tendencia importa más que cualquier titular trimestral.",
+    src:"BCRD · Mercado de trabajo (ENCFT)", srcUrl:"https://www.bancentral.gov.do/a/d/2541-encft",
+    load:{ kind:"local", id:"CE-SER-2026-0011", variable:"Total" } },
+
+  { key:"inflacion", panel:"do", theme:"Precios y política monetaria", title:"Inflación subyacente",
+    freq:"Mensual", unitLabel:"Variación % interanual", fmt:"pct", dec:1, sign:"invert",
+    blurb:"La inflación que ve el Banco Central. La subyacente excluye alimentos y combustibles volátiles y revela la presión de precios de fondo: es la que guía las decisiones de tasa. La meta oficial es 4% ± 1%.",
+    src:"BCRD · Precios (IPC)", srcUrl:"https://www.bancentral.gov.do/a/d/2529-precios",
+    load:{ kind:"local", id:"CE-SER-2026-0028", variable:"IPC | Subyacente", transform:"yoy", lag:12 } },
+
+  { key:"tpm", panel:"do", theme:"Precios y política monetaria", title:"Tasa de política monetaria",
+    freq:"Mensual", unitLabel:"% anual", fmt:"pct", dec:2, sign:"neutral",
+    blurb:"El precio del dinero fijado por el BCRD. La TPM es el ancla de todo el sistema: sube para enfriar la inflación y la demanda, baja para estimular el crédito. Su recorrido resume la postura monetaria del país.",
+    src:"BCRD · Política monetaria", srcUrl:"https://www.bancentral.gov.do/a/d/2557-tasas-de-interes",
+    load:{ kind:"local", id:"CE-SER-2026-0032", variable:"tasa_politica_monetaria", scale:100 } },
+
+  { key:"tasa_activa", panel:"do", theme:"Precios y política monetaria", title:"Tasa activa · comercio",
+    freq:"Mensual", unitLabel:"% anual", fmt:"pct", dec:2, sign:"invert",
+    blurb:"Lo que de verdad paga el sector productivo por financiarse. La brecha entre esta tasa y la TPM mide qué tan bien —o mal— transmite el Banco Central su política al costo real del crédito.",
+    src:"BCRD · Tasas de interés", srcUrl:"https://www.bancentral.gov.do/a/d/2557-tasas-de-interes",
+    load:{ kind:"local", id:"CE-SER-2026-0026", variable:"Comercio | Otros", scale:100 } },
+
+  { key:"fx", panel:"do", theme:"Sector externo", title:"Tipo de cambio · venta",
+    freq:"Diaria", unitLabel:"RD$ por US$", fmt:"rd", dec:2, sign:"invert",
+    blurb:"El precio del dólar, la variable más vigilada del país. Una economía dolarizada de facto en su comercio: el tipo de cambio traslada precios importados a la inflación y define la competitividad de exportaciones, turismo y zonas francas.",
+    src:"BCRD · Mercado cambiario", srcUrl:"https://www.bancentral.gov.do/a/d/2539-mercado-cambiario",
+    load:{ kind:"local", id:"CE-SER-2026-0027", variable:"Venta" } },
+
+  { key:"reservas", panel:"do", theme:"Sector externo", title:"Reservas internacionales brutas",
+    freq:"Mensual", unitLabel:"Millones de US$", fmt:"usdM", dec:0, sign:"normal",
+    blurb:"El colchón de dólares del país. Las reservas son la munición del BCRD para defender el peso y honrar pagos externos; su nivel (medido en meses de importaciones) es la primera línea que miran las calificadoras.",
+    src:"BCRD · Sector externo", srcUrl:"https://www.bancentral.gov.do/a/d/2538-sector-externo",
+    load:{ kind:"local", id:"CE-SER-2026-0035", variable:"BRUTAS" } },
+
+  { key:"remesas", panel:"do", theme:"Sector externo", title:"Remesas familiares",
+    freq:"Mensual", unitLabel:"Millones de US$", fmt:"usdM", dec:0, sign:"normal",
+    blurb:"La segunda fuente de divisas después del turismo. Las remesas sostienen el consumo de millones de hogares y ayudan a financiar el déficit de cuenta corriente; su pulso sigue de cerca el empleo hispano en EE.UU.",
+    src:"BCRD · Sector externo", srcUrl:"https://www.bancentral.gov.do/a/d/2538-sector-externo",
+    load:{ kind:"local", id:"CE-SER-2026-0037", variable:"remesas_familiares_recibidas", scale:0.000001 } },
+
+  { key:"cuenta_corriente", panel:"do", theme:"Sector externo", title:"Cuenta corriente",
+    freq:"Anual", unitLabel:"Millones de US$", fmt:"usdM", dec:0, sign:"normal",
+    blurb:"El saldo del país con el resto del mundo. Un déficit crónico obliga a financiarse con deuda o inversión extranjera; su tamaño frente al PIB es una de las alertas tempranas de vulnerabilidad externa.",
+    src:"BCRD · Balanza de pagos", srcUrl:"https://www.bancentral.gov.do/a/d/2538-sector-externo",
+    load:{ kind:"local", id:"CE-SER-2026-0038", variable:"1. Cuenta Corriente" } },
+
+  { key:"turismo", panel:"do", theme:"Sector externo", title:"Turismo · pasajeros aéreos",
+    freq:"Mensual", unitLabel:"Pasajeros llegados", fmt:"persons", dec:0, sign:"normal",
+    blurb:"El motor de divisas número uno. La llegada de pasajeros vía aérea es el indicador adelantado del turismo, sector que sostiene reservas, empleo y buena parte de la construcción del país.",
+    src:"BCRD · Sector turismo", srcUrl:"https://www.bancentral.gov.do/a/d/2536-sector-turismo",
+    load:{ kind:"local", id:"CE-SER-2026-0031", variable:"pasajeros_via_aerea_total_columna" } },
+
+  { key:"deuda_pib", panel:"do", theme:"Fiscal y deuda", title:"Deuda pública consolidada",
+    freq:"Anual", unitLabel:"% del PIB", fmt:"pct", dec:1, sign:"invert",
+    blurb:"La foto de la sostenibilidad fiscal. La deuda del sector público consolidado sobre PIB resume décadas de déficits; su trayectoria define el margen del Estado para invertir y su costo de financiamiento externo.",
+    src:"BCRD / Crédito Público", srcUrl:"https://www.creditopublico.gob.do/",
+    load:{ kind:"local", id:"CE-SER-2026-0034", variable:"DEUDA PUBLICA CONSOLIDADA (A+B)", scale:100 } },
+
+  { key:"recaudacion", panel:"do", theme:"Fiscal y deuda", title:"Recaudación DGII",
+    freq:"Mensual", unitLabel:"Millones de RD$", fmt:"rdM", dec:0, sign:"normal",
+    blurb:"El pulso de los ingresos del Estado. La recaudación de Impuestos Internos financia la mayor parte del presupuesto; su crecimiento real (descontando inflación) mide tanto la actividad económica como la eficiencia de la administración tributaria.",
+    src:"DGII · Recaudación", srcUrl:"https://dgii.gov.do/estadisticas/recaudaciones/Paginas/default.aspx",
+    load:{ kind:"local", id:"CE-SER-2026-0049", variable:"monto_recaudado", aggregate:"sum", scale:0.000001 } },
+
+  /* ——————————————————————— GLOBAL & MERCADOS (en vivo) ——————————————————————— */
+  { key:"fedfunds", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Tasa de la Reserva Federal",
+    freq:"Mensual", unitLabel:"% anual (Fed Funds)", fmt:"pct", dec:2, sign:"neutral", live:true,
+    blurb:"El tipo de interés más importante del mundo. Cuando la Fed sube, el dólar se fortalece, salen capitales de mercados emergentes y sube el costo de la deuda dominicana; marca el techo de la política monetaria del BCRD.",
+    src:"FRED · Federal Reserve", srcUrl:"https://fred.stlouisfed.org/series/FEDFUNDS",
+    load:{ kind:"fred", fredId:"FEDFUNDS" } },
+
+  { key:"ust10", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Bono del Tesoro EE.UU. · 10 años",
+    freq:"Diaria", unitLabel:"Rendimiento % anual", fmt:"pct", dec:2, sign:"neutral", live:true,
+    blurb:"El precio global del dinero a largo plazo. El rendimiento del Treasury a 10 años es la referencia para valorar bonos soberanos: cuando sube, encarece cada nueva emisión de deuda dominicana en los mercados internacionales.",
+    src:"FRED · U.S. Treasury", srcUrl:"https://fred.stlouisfed.org/series/DGS10",
+    load:{ kind:"fred", fredId:"DGS10" } },
+
+  { key:"curva", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Pendiente de la curva · 10a − 2a",
+    freq:"Diaria", unitLabel:"Puntos porcentuales", fmt:"pct", dec:2, sign:"neutral", live:true,
+    blurb:"El indicador de recesión más citado. Cuando el spread entre el bono a 10 y a 2 años se vuelve negativo (curva invertida), históricamente ha anticipado recesiones en EE.UU. —el principal socio comercial dominicano.",
+    src:"FRED · Treasury spread", srcUrl:"https://fred.stlouisfed.org/series/T10Y2Y",
+    load:{ kind:"fred", fredId:"T10Y2Y" } },
+
+  { key:"us_cpi", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Inflación de EE.UU.",
+    freq:"Mensual", unitLabel:"Variación % interanual", fmt:"pct", dec:1, sign:"invert", live:true,
+    blurb:"El dato que mueve a la Fed y, con ella, al mundo. La inflación estadounidense determina cuánto tiempo se mantienen altas las tasas globales; su desaceleración abre espacio para recortes que alivian a los emergentes.",
+    src:"FRED · BLS (CPI)", srcUrl:"https://fred.stlouisfed.org/series/CPIAUCSL",
+    load:{ kind:"fred", fredId:"CPIAUCSL", transform:"yoy", lag:12 } },
+
+  { key:"wti", panel:"global", theme:"Mercados y materias primas", title:"Petróleo WTI",
+    freq:"Diaria", unitLabel:"US$ por barril", fmt:"usd", dec:2, sign:"invert", live:true,
+    blurb:"El costo de importar energía. La República Dominicana importa casi todo su petróleo: el precio del crudo se traslada a la factura eléctrica, al transporte y a la inflación, y presiona el déficit comercial y los subsidios.",
+    src:"FRED · EIA (WTI)", srcUrl:"https://fred.stlouisfed.org/series/DCOILWTICO",
+    load:{ kind:"fred", fredId:"DCOILWTICO" } },
+
+  { key:"dxy_broad", panel:"global", theme:"Mercados y materias primas", title:"Índice del dólar · amplio",
+    freq:"Diaria", unitLabel:"Índice (base 2006=100)", fmt:"idx", dec:1, sign:"invert", live:true,
+    blurb:"La fuerza global del dólar frente a una canasta amplia de monedas. Un dólar fuerte encarece las materias primas, tensiona a las economías endeudadas en dólares y suele coincidir con salidas de capital de mercados emergentes.",
+    src:"FRED · Fed (Broad USD)", srcUrl:"https://fred.stlouisfed.org/series/DTWEXBGS",
+    load:{ kind:"fred", fredId:"DTWEXBGS" } },
+
+  { key:"vix", panel:"global", theme:"Mercados y materias primas", title:"Índice de volatilidad · VIX",
+    freq:"Diaria", unitLabel:"Puntos (índice VIX)", fmt:"idx", dec:1, sign:"invert", live:true,
+    blurb:"El «índice del miedo» de Wall Street. Cuando el VIX se dispara, los inversionistas huyen del riesgo: se encarece el financiamiento externo de países emergentes y se frenan las emisiones de deuda soberana.",
+    src:"FRED · Cboe (VIX)", srcUrl:"https://fred.stlouisfed.org/series/VIXCLS",
+    load:{ kind:"fred", fredId:"VIXCLS" } },
+
+  { key:"gold", panel:"global", theme:"Mercados y materias primas", title:"Oro",
+    freq:"Semanal", unitLabel:"US$ por onza troy", fmt:"usd", dec:0, sign:"normal", live:true,
+    blurb:"El refugio y el termómetro del riesgo global. El oro sube cuando cae la confianza en las monedas fiduciarias o bajan las tasas reales; para la RD es además un renglón exportador relevante (Pueblo Viejo).",
+    src:"Yahoo Finance · Oro (GC=F)", srcUrl:"https://finance.yahoo.com/quote/GC=F",
+    load:{ kind:"yahoo", symbol:"GC=F", range:"5y", interval:"1wk" } },
+
+  { key:"sp500", panel:"global", theme:"Mercados y materias primas", title:"S&P 500",
+    freq:"Semanal", unitLabel:"Puntos del índice", fmt:"idx", dec:0, sign:"normal", live:true,
+    blurb:"El barómetro de la renta variable mundial. El S&P 500 marca el apetito global por riesgo: cuando sube sostenidamente, mejora el clima para captar inversión extranjera y colocar deuda en condiciones favorables.",
+    src:"Yahoo Finance · S&P 500 (^GSPC)", srcUrl:"https://finance.yahoo.com/quote/%5EGSPC",
+    load:{ kind:"yahoo", symbol:"^GSPC", range:"5y", interval:"1wk" } },
+
+  { key:"btc", panel:"global", theme:"Mercados y materias primas", title:"Bitcoin",
+    freq:"Semanal", unitLabel:"US$ por BTC", fmt:"usd", dec:0, sign:"normal", live:true,
+    blurb:"El activo de riesgo más volátil del tablero. Bitcoin funciona hoy como un indicador extremo del apetito por riesgo y la liquidez global: se dispara cuando abunda el dinero barato y se desploma cuando se retira.",
+    src:"Yahoo Finance · Bitcoin (BTC-USD)", srcUrl:"https://finance.yahoo.com/quote/BTC-USD",
+    load:{ kind:"yahoo", symbol:"BTC-USD", range:"5y", interval:"1wk" } }
+];
+
+const STAT_PANELS = [
+  { id:"do", label:"Dominicana" },
+  { id:"global", label:"Global & mercados" }
+];
+
+// Orden de temas tal como aparecen en CURATED, agrupados por panel.
+const STAT_THEMES = (() => {
+  const out = {};
+  for (const c of CURATED) {
+    (out[c.panel] = out[c.panel] || []);
+    if (!out[c.panel].includes(c.theme)) out[c.panel].push(c.theme);
+  }
+  return out;
+})();
+
+/* ---- Formateo editorial de lecturas (no números crudos) ---- */
+function grpNum(v, dec) {
+  return v.toLocaleString("es-DO", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function fmtReading(v, fmt, dec = 1) {
+  if (v == null || isNaN(v)) return "—";
+  switch (fmt) {
+    case "pct":     return grpNum(v, dec) + "%";
+    case "usd":     return "US$ " + grpNum(v, dec);
+    case "usdM":    return "US$ " + grpNum(v, 0) + " MM";
+    case "rd":      return "RD$ " + grpNum(v, dec);
+    case "rdM":     return "RD$ " + grpNum(v, 0) + " MM";
+    case "persons":
+      if (Math.abs(v) >= 1e6) return grpNum(v / 1e6, 2) + " M";
+      return grpNum(v, 0);
+    case "idx":     return grpNum(v, dec);
+    default:        return fmtNum(v);
+  }
+}
+function fmtDelta(d, fmt, dec = 1) {
+  if (d == null || isNaN(d)) return "—";
+  const sign = d > 0 ? "+" : d < 0 ? "−" : "";
+  const a = Math.abs(d);
+  let body;
+  switch (fmt) {
+    case "pct":  body = grpNum(a, dec) + " pp"; break;
+    case "usd":  body = "US$ " + grpNum(a, dec); break;
+    case "usdM": body = "US$ " + grpNum(a, 0) + " MM"; break;
+    case "rd":   body = "RD$ " + grpNum(a, dec); break;
+    case "rdM":  body = "RD$ " + grpNum(a, 0) + " MM"; break;
+    case "persons": body = (a >= 1e6 ? grpNum(a / 1e6, 2) + " M" : grpNum(a, 0)); break;
+    default:     body = grpNum(a, dec);
+  }
+  return sign + body;
+}
+
+// Etiqueta corta y legible para el eje X, cualquiera sea la frecuencia.
+const MES_ABREV = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+function axisLabel(t) {
+  if (t == null) return "";
+  const s = String(t);
+  if (/^\d{4}$/.test(s)) return s;                 // anual
+  const p = s.split("-");
+  if (p.length >= 2) {
+    const yy = p[0].slice(2);
+    const mo = MES_ABREV[(parseInt(p[1], 10) || 1) - 1] || "";
+    return mo + " " + yy;
+  }
+  return s;
+}
+
+/* ---- Cargadores unificados: master local, FRED y Yahoo Finance ---- */
+async function loadLocalPoints({ id, variable, aggregate }) {
+  const r = await fetch("data/series/" + id + ".json", { cache: "no-store" });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const data = await r.json();
+  const rows = (data.observations || [])
+    .filter(o => (variable ? o.variable === variable : true))
+    .filter(o => o.value != null && !isNaN(+o.value));
+  if (aggregate === "sum") {
+    const m = new Map();
+    for (const o of rows) {
+      const k = o.period || o.date;
+      m.set(k, (m.get(k) || 0) + (+o.value));
+    }
+    return Array.from(m, ([t, v]) => ({ t, v, _d: t })).sort((a, b) => (a._d < b._d ? -1 : a._d > b._d ? 1 : 0));
+  }
+  return rows
+    .map(o => ({ t: o.period || o.date, v: +o.value, _d: o.date }))
+    .sort((a, b) => (a._d < b._d ? -1 : a._d > b._d ? 1 : 0));
+}
+
+async function loadFredPoints({ fredId }) {
+  const url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=" + encodeURIComponent(fredId);
+  const txt = await fetchTextWithCors(url);
+  const lines = txt.trim().split(/\r?\n/);
+  const out = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",");
+    if (cols.length < 2) continue;
+    const d = cols[0].trim();
+    const v = parseFloat(cols[1]);
+    if (!d || isNaN(v)) continue;      // FRED marca los faltantes con "."
+    out.push({ t: d, v, _d: d });
+  }
+  if (!out.length) throw new Error("Sin observaciones en FRED");
+  return out.sort((a, b) => (a._d < b._d ? -1 : a._d > b._d ? 1 : 0));
+}
+
+async function loadYahooPoints({ symbol, range = "5y", interval = "1wk" }) {
+  const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
+    encodeURIComponent(symbol) + "?range=" + range + "&interval=" + interval;
+  const txt = await fetchTextWithCors(url);
+  const j = JSON.parse(txt);
+  const res = j && j.chart && j.chart.result && j.chart.result[0];
+  if (!res || !res.timestamp) throw new Error("Sin datos de mercado");
+  const ts = res.timestamp;
+  const close = res.indicators && res.indicators.quote && res.indicators.quote[0] && res.indicators.quote[0].close || [];
+  const out = [];
+  for (let i = 0; i < ts.length; i++) {
+    const v = close[i];
+    if (v == null || isNaN(v)) continue;
+    const d = new Date(ts[i] * 1000).toISOString().slice(0, 10);
+    out.push({ t: d, v, _d: d });
+  }
+  if (!out.length) throw new Error("Sin cierres de mercado");
+  return out;
+}
+
+async function loadCuratedPoints(load) {
+  let pts;
+  if (load.kind === "local") pts = await loadLocalPoints(load);
+  else if (load.kind === "fred") pts = await loadFredPoints(load);
+  else if (load.kind === "yahoo") pts = await loadYahooPoints(load);
+  else return [];
+  // Transformaciones (sobre la serie ya ordenada). yoy primero, luego escala.
+  if (load.transform === "yoy") {
+    const lag = load.lag || 12;
+    const t = [];
+    for (let i = lag; i < pts.length; i++) {
+      const base = pts[i - lag].v;
+      if (base) t.push({ t: pts[i].t, v: (pts[i].v / base - 1) * 100, _d: pts[i]._d });
+    }
+    pts = t;
+  }
+  if (load.scale) pts = pts.map(o => ({ t: o.t, v: o.v * load.scale, _d: o._d }));
+  return pts;
+}
+
+function StatsBody({ toast, initialTheme, onSubChange }) {
   const { Tooltip, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Area, AreaChart } = RC;
 
-  // Estado del master
-  const [catalog, setCatalog] = useState([]);
-  const [catalogError, setCatalogError] = useState(null);
-  const [loadingCatalog, setLoadingCatalog] = useState(true);
-
-  // Serie seleccionada + sus observaciones
-  const [selectedId, setSelectedId] = useState(null);
-  const [seriesPayload, setSeriesPayload] = useState(null);
-  const [loadingSeries, setLoadingSeries] = useState(false);
-  const [seriesError, setSeriesError] = useState(null);
-  const [activeVar, setActiveVar] = useState(null);
-
-  // 1) Cargar catálogo ligero una sola vez.
-  useEffect(() => {
-    let alive = true;
-    setLoadingCatalog(true);
-    fetch("data/series_catalog.json")
-      .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(data => { if (alive) { setCatalog(data); setLoadingCatalog(false); } })
-      .catch(err => { if (alive) { setCatalogError(err.message); setLoadingCatalog(false); } });
-    return () => { alive = false; };
+  // Panel activo (Dominicana / Global) derivado del tema inicial de la navegación.
+  const themeToPanel = useMemo(() => {
+    const m = {};
+    for (const c of CURATED) m[c.theme] = c.panel;
+    return m;
   }, []);
+  const [panel, setPanel] = useState(() => themeToPanel[initialTheme] || "do");
+  useEffect(() => { if (initialTheme && themeToPanel[initialTheme]) setPanel(themeToPanel[initialTheme]); }, [initialTheme]);
 
-  // Series destacadas que deben aparecer primero, por institución.
-  const PINNED = {
-    "BCRD": ["CE-SER-2026-0018", "CE-SER-2026-0032", "CE-SER-2026-0035"]
-  };
+  const itemsInPanel = useMemo(() => CURATED.filter(c => c.panel === panel), [panel]);
+  const themesInPanel = STAT_THEMES[panel] || [];
 
-  // Series visibles según institución activa, con las destacadas al frente.
-  const sourceKey = SOURCE_MAP[institution];
-  const visibleSeries = useMemo(() => {
-    if (!sourceKey) return [];
-    const all = catalog.filter(s => s.fuente === sourceKey);
-    const pinned = PINNED[institution] || [];
-    if (!pinned.length) return all;
-    const order = new Map(pinned.map((id, i) => [id, i]));
-    return all.slice().sort((a, b) => {
-      const ai = order.has(a.id) ? order.get(a.id) : Infinity;
-      const bi = order.has(b.id) ? order.get(b.id) : Infinity;
-      if (ai !== bi) return ai - bi;
-      return 0; // estable: el resto conserva su orden de catálogo
-    });
-  }, [catalog, sourceKey, institution]);
-
-  // Auto-seleccionar la primera serie cuando cambia la institución.
+  // Indicador seleccionado.
+  const [selectedKey, setSelectedKey] = useState(null);
   useEffect(() => {
-    if (visibleSeries.length > 0) {
-      setSelectedId(visibleSeries[0].id);
-    } else {
-      setSelectedId(null);
-      setSeriesPayload(null);
-    }
-  }, [institution, visibleSeries.length]);
+    // Al cambiar de panel: si el tema inicial pertenece a este panel, abre su primer indicador.
+    const first = initialTheme
+      ? itemsInPanel.find(c => c.theme === initialTheme)
+      : null;
+    setSelectedKey((first || itemsInPanel[0] || {}).key || null);
+  }, [panel]);
 
-  // 2) Cargar observaciones de la serie seleccionada (bajo demanda).
+  const selected = useMemo(() => CURATED.find(c => c.key === selectedKey) || null, [selectedKey]);
+
+  // Carga de la serie del indicador seleccionado.
+  const [points, setPoints] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selected) { setPoints([]); return; }
     let alive = true;
-    setLoadingSeries(true);
-    setSeriesError(null);
-    fetch("data/series/" + selectedId + ".json")
-      .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(data => {
-        if (!alive) return;
-        setSeriesPayload(data);
-        const vars = data.meta?.variables || [];
-        setActiveVar(vars.length ? vars[0] : null);
-        setLoadingSeries(false);
-      })
-      .catch(err => { if (alive) { setSeriesError(err.message); setLoadingSeries(false); } });
+    setLoading(true); setError(null); setPoints([]);
+    loadCuratedPoints(selected.load)
+      .then(p => { if (alive) { setPoints(p); setLoading(false); } })
+      .catch(err => { if (alive) { setError(err.message || "No se pudo cargar"); setLoading(false); } });
     return () => { alive = false; };
-  }, [selectedId]);
+  }, [selectedKey]);
 
-  const meta = seriesPayload?.meta || null;
-  const variables = meta?.variables || [];
+  const chartData = useMemo(
+    () => downsample(points, 220).map(o => ({ t: axisLabel(o.t), v: o.v })),
+    [points]
+  );
 
-  // Lista real de variables presentes en las observaciones (no solo en meta).
-  const obsVariables = useMemo(() => {
-    if (!seriesPayload?.observations) return [];
-    const set = new Set();
-    for (const o of seriesPayload.observations) {
-      if (o.variable != null) set.add(o.variable);
-    }
-    return Array.from(set);
-  }, [seriesPayload]);
-
-  // Variable efectiva: la activa si existe en esta serie; si no, la primera disponible.
-  // Se resuelve aquí (no en un effect) para no depender del orden de setState.
-  const effectiveVar = useMemo(() => {
-    if (obsVariables.length === 0) return null;
-    if (activeVar && obsVariables.includes(activeVar)) return activeVar;
-    return obsVariables[0];
-  }, [activeVar, obsVariables]);
-
-  // Observaciones completas de la variable efectiva, ordenadas -> [{t, v}]
-  const fullObs = useMemo(() => {
-    if (!seriesPayload?.observations) return [];
-    const hasVarDim = obsVariables.length > 0;
-    const obs = seriesPayload.observations
-      .filter(o => (!hasVarDim ? true : o.variable === effectiveVar))
-      .filter(o => o.value != null && !isNaN(+o.value))
-      .map(o => ({ t: o.period || o.date, v: +o.value, _d: o.date }));
-    obs.sort((a, b) => (a._d < b._d ? -1 : a._d > b._d ? 1 : 0));
-    return obs;
-  }, [seriesPayload, effectiveVar, obsVariables.length]);
-
-  // El gráfico se reduce a ~220 puntos; los KPIs usan la serie completa
-  // para que la variación sea contra el período real anterior.
-  const chartData = useMemo(() => downsample(fullObs, 220), [fullObs]);
-
-  // KPIs
-  const last = fullObs.length ? fullObs[fullObs.length - 1].v : null;
-  const prev = fullObs.length > 1 ? fullObs[fullObs.length - 2].v : null;
-  const lastPeriod = fullObs.length ? fullObs[fullObs.length - 1].t : null;
+  // Lectura y variación.
+  const last = points.length ? points[points.length - 1].v : null;
+  const prev = points.length > 1 ? points[points.length - 2].v : null;
+  const lastT = points.length ? points[points.length - 1].t : null;
   const delta = (last != null && prev != null) ? last - prev : null;
-  const dir = delta == null ? "" : delta > 0 ? "up" : delta < 0 ? "down" : "";
-  const deltaPct = (delta != null && prev) ? (delta / Math.abs(prev)) * 100 : null;
+  const fmt = selected ? selected.fmt : "num";
+  const dec = selected ? (selected.dec != null ? selected.dec : 1) : 1;
+  const sign = selected ? selected.sign : "neutral";
+  // Color: normal → subir es verde; invert → subir es rojo; neutral → sin color.
+  let dir = "";
+  if (delta != null && sign !== "neutral") {
+    const good = sign === "invert" ? delta < 0 : delta > 0;
+    dir = delta === 0 ? "" : good ? "up" : "down";
+  }
 
   return (
     <div>
       <div className="subview-banner">
-        <div><span>Institución activa</span><h3>{institution}</h3></div>
-        <p>Catálogo conectado al master de datos del Club. {sourceKey
-          ? `${visibleSeries.length} ${visibleSeries.length === 1 ? "serie disponible" : "series disponibles"} para ${institution}.`
-          : `Aún no hay series cargadas para ${institution} en esta versión.`}</p>
+        <div>
+          <span>{panel === "do" ? "Economía dominicana" : "Economía internacional"}</span>
+          <h3>{panel === "do" ? "Los indicadores que mandan" : "Global & mercados"}</h3>
+        </div>
+        <p>{panel === "do"
+          ? "Una selección curada del master del Club: pocos indicadores, los que de verdad marcan el rumbo de la economía dominicana. Cada uno con su contexto y su fuente."
+          : "Tablero internacional en vivo: tasas, bonos, materias primas y mercados que definen el entorno externo de la República Dominicana, tomados de la FRED y de Yahoo Finance."}</p>
       </div>
 
       <div className="institution-strip">
-        {institutions.map(i => (
-          <button key={i} className={`institution-pill ${i === institution ? "on" : ""}`}
-            onClick={() => { setInstitution(i); onSubChange && onSubChange(i); }}>{i}</button>
+        {STAT_PANELS.map(p => (
+          <button key={p.id} className={`institution-pill ${p.id === panel ? "on" : ""}`}
+            onClick={() => { setPanel(p.id); onSubChange && onSubChange((STAT_THEMES[p.id] || [])[0]); }}>
+            {p.label}
+          </button>
         ))}
       </div>
 
-      {loadingCatalog && <div style={{ padding: "32px 0", color: "var(--azul-50)", fontSize: 13 }}>Cargando catálogo de series…</div>}
-      {catalogError && <div style={{ padding: "32px 0", color: "#9B3A2E", fontSize: 13 }}>No se pudo cargar el catálogo ({catalogError}). Verifica que la carpeta <code>data/</code> esté publicada en la raíz del sitio.</div>}
-
-      {!loadingCatalog && !catalogError && (
-        <div className="stats-layout">
-          <div className="series-list">
-            {visibleSeries.length === 0 && (
-              <div style={{ padding: 16, color: "var(--azul-50)", fontSize: 13 }}>Sin series para esta institución todavía.</div>
-            )}
-            {visibleSeries.map(it => (
-              <button key={it.id} className={`series-item ${it.id === selectedId ? "sel" : ""}`} onClick={() => setSelectedId(it.id)}>
-                <div className="code">{it.id}</div>
-                <div className="t">{it.nombre}</div>
-                <div className="m">{it.fuente} · {cap(it.frecuencia)} · {it.observations.toLocaleString("es-DO")} obs.</div>
-              </button>
-            ))}
-          </div>
-
-          <div className="series-detail">
-            {!selectedId && <div style={{ padding: 24, color: "var(--azul-50)" }}>Selecciona una serie del listado.</div>}
-
-            {selectedId && (
-              <>
-                <div className="series-detail-head">
-                  <div>
-                    <h3>{meta?.nombre || "—"}</h3>
-                    <div className="sub">{meta ? `${meta.fuente} · ${cap(meta.frecuencia)} · ${humanizeUnit(meta.unidad)}` : ""}</div>
-                  </div>
-                  <span className="badge-id">{selectedId}</span>
-                </div>
-
-                {obsVariables.length > 1 && (
-                  <VarSelect options={obsVariables} value={effectiveVar} onChange={setActiveVar} />
-                )}
-
-                <div className="kpis">
-                  <div className="kpi"><div className={`v ${dir}`}>{fmtNum(last)}</div><div className="k">{lastPeriod ? `Último valor · ${lastPeriod}` : "Último valor"}</div></div>
-                  <div className="kpi"><div className={`v ${dir}`}>{delta == null ? "—" : (delta > 0 ? "+" : "") + fmtNum(delta) + (deltaPct != null ? ` (${deltaPct > 0 ? "+" : ""}${deltaPct.toFixed(1)}%)` : "")}</div><div className="k">Variación vs. anterior</div></div>
-                  <div className="kpi"><div className="v">{fmtMonth(meta?.end_date)}</div><div className="k">Actualizado</div></div>
-                </div>
-
-                <div className="chart-box">
-                  {loadingSeries ? (
-                    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>Cargando observaciones…</div>
-                  ) : seriesError ? (
-                    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9B3A2E", fontSize: 13 }}>Error al cargar la serie ({seriesError}).</div>
-                  ) : !ResponsiveContainer ? (
-                    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>Cargando motor de gráficos…</div>
-                  ) : chartData.length ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#C2A356" stopOpacity={0.30} />
-                            <stop offset="100%" stopColor="#C2A356" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid stroke="rgba(14,22,38,0.08)" vertical={false} />
-                        <XAxis dataKey="t" tick={{ fill: "#6E7C8C", fontSize: 11, fontFamily: "Inter" }} axisLine={false} tickLine={false} minTickGap={28} />
-                        <YAxis tick={{ fill: "#6E7C8C", fontSize: 11, fontFamily: "Inter" }} axisLine={false} tickLine={false} width={52} domain={['auto', 'auto']} tickFormatter={fmtNum} />
-                        <Tooltip formatter={(val) => [fmtNum(val), humanizeVar(effectiveVar) || "valor"]} contentStyle={{ borderRadius: 0, border: "1px solid rgba(14,22,38,0.18)", fontFamily: "Inter", fontSize: 13, boxShadow: "0 12px 28px -12px rgba(0,0,0,0.22)" }} labelStyle={{ color: "#0E1626", fontWeight: 600 }} />
-                        <Area type="monotone" dataKey="v" stroke="#C2A356" strokeWidth={2.2} fill="url(#gold)" dot={false} activeDot={{ r: 5, fill: "#0E1626" }} animationDuration={600} animationEasing="ease-out" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>Sin datos graficables para esta variable.</div>
-                  )}
-                </div>
-
-                <div className="series-actions">
-                  <button className="chip" onClick={() => { window.open("data/series/" + selectedId + ".json", "_blank"); }}>{Ico.dl()} JSON</button>
-                  <button className="chip" onClick={() => { navigator.clipboard?.writeText(location.origin + "/data/series/" + selectedId + ".json"); toast("Endpoint copiado"); }}>{Ico.api()} API</button>
-                  <button className="chip" onClick={() => { navigator.clipboard?.writeText(`Club Economistas (2026). ${meta?.nombre}. Serie ${selectedId}. Fuente: ${meta?.fuente}.`); toast("Cita copiada"); }}>{Ico.cite()} Citar</button>
-                </div>
-              </>
-            )}
-          </div>
+      <div className="stats-layout">
+        <div className="series-list">
+          {themesInPanel.map(theme => (
+            <div key={theme} className="stat-theme-group">
+              <div className="stat-theme-label">{theme}</div>
+              {itemsInPanel.filter(c => c.theme === theme).map(it => (
+                <button key={it.key} className={`series-item ${it.key === selectedKey ? "sel" : ""}`}
+                  onClick={() => setSelectedKey(it.key)}>
+                  <div className="t">{it.title}</div>
+                  <div className="m">{it.src.split(" · ")[0].split(" / ")[0]} · {it.freq}{it.live ? " · en vivo" : ""}</div>
+                </button>
+              ))}
+            </div>
+          ))}
         </div>
-      )}
+
+        <div className="series-detail">
+          {!selected && <div style={{ padding: 24, color: "var(--azul-50)" }}>Selecciona un indicador.</div>}
+          {selected && (
+            <>
+              <div className="series-detail-head">
+                <div>
+                  <h3>{selected.title}</h3>
+                  <div className="sub">{selected.src} · {selected.freq} · {selected.unitLabel}</div>
+                </div>
+                {selected.live && <span className="live-badge"><span className="dot"></span> En vivo</span>}
+              </div>
+
+              <p className="series-blurb">{selected.blurb}</p>
+
+              <div className="kpis">
+                <div className="kpi">
+                  <div className={`v big ${dir}`}>{loading ? "…" : error ? "—" : fmtReading(last, fmt, dec)}</div>
+                  <div className="k">{lastT ? `Último dato · ${axisLabel(lastT)}` : "Último dato"}</div>
+                </div>
+                <div className="kpi">
+                  <div className={`v ${dir}`}>{loading || error ? "—" : fmtDelta(delta, fmt, dec)}</div>
+                  <div className="k">Variación vs. período previo</div>
+                </div>
+              </div>
+
+              <div className="chart-box">
+                {loading ? (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>
+                    {selected.live ? "Consultando la fuente en vivo…" : "Cargando serie…"}
+                  </div>
+                ) : error ? (
+                  <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "#9B3A2E", fontSize: 13, textAlign: "center", padding: "0 16px" }}>
+                    <span>No se pudo cargar el indicador ({error}).</span>
+                    {selected.live && <span style={{ color: "var(--azul-50)" }}>Los datos globales se piden en vivo a la fuente; reintenta o ábrela directamente abajo.</span>}
+                  </div>
+                ) : !ResponsiveContainer ? (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>Cargando motor de gráficos…</div>
+                ) : chartData.length ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -6, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#C2A356" stopOpacity={0.30} />
+                          <stop offset="100%" stopColor="#C2A356" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid stroke="rgba(14,22,38,0.08)" vertical={false} />
+                      <XAxis dataKey="t" tick={{ fill: "#6E7C8C", fontSize: 11, fontFamily: "Inter" }} axisLine={false} tickLine={false} minTickGap={28} />
+                      <YAxis tick={{ fill: "#6E7C8C", fontSize: 11, fontFamily: "Inter" }} axisLine={false} tickLine={false} width={60} domain={['auto', 'auto']} tickFormatter={(v) => fmtReading(v, fmt, fmt === "pct" ? 0 : dec)} />
+                      <Tooltip formatter={(val) => [fmtReading(val, fmt, dec), selected.unitLabel]} contentStyle={{ borderRadius: 0, border: "1px solid rgba(14,22,38,0.18)", fontFamily: "Inter", fontSize: 13, boxShadow: "0 12px 28px -12px rgba(0,0,0,0.22)" }} labelStyle={{ color: "#0E1626", fontWeight: 600 }} />
+                      <Area type="monotone" dataKey="v" stroke="#C2A356" strokeWidth={2.2} fill="url(#gold)" dot={false} activeDot={{ r: 5, fill: "#0E1626" }} animationDuration={600} animationEasing="ease-out" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>Sin datos graficables.</div>
+                )}
+              </div>
+
+              <div className="series-source">
+                <span>Fuente:</span>
+                <a href={selected.srcUrl} target="_blank" rel="noopener noreferrer">{selected.src}</a>
+                <button className="chip" style={{ marginLeft: "auto" }}
+                  onClick={() => { navigator.clipboard?.writeText(`Club Economistas (2026). ${selected.title} (${selected.unitLabel}). Fuente: ${selected.src}.`); toast("Cita copiada"); }}>
+                  {Ico.cite()} Citar
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -2714,7 +2980,7 @@ const VIEWS = {
     num: "I",
     title: "Estadísticas",
     kicker: "Repositorio de datos",
-    lead: "Series económicas dominicanas depuradas, citables y accesibles por API. Cada una conserva su identificador permanente."
+    lead: "No un catálogo de series, sino una curaduría: los indicadores que de verdad mueven la economía dominicana, más un tablero global en vivo (FRED y mercados). Cada uno con su contexto, su lectura y su fuente."
   },
   investigacion: {
     num: "II",
@@ -3121,7 +3387,7 @@ function Footer({ go, content }) {
 /* ============================== APP ============================== */
 function App() {
   const [active, setActive] = useState("inicio");
-  const [subview, setSubview] = useState({ estadisticas:"BCRD", blog:"Blogstop", noticias:"Noticias económicas", club:"Organigrama" });
+  const [subview, setSubview] = useState({ estadisticas:"Actividad y crecimiento", blog:"Blogstop", noticias:"Noticias económicas", club:"Organigrama" });
   const [content, setContentState] = useState(() => deepMerge(DEFAULT_CONTENT, loadLocalContent() || {}));
   const setContent = React.useCallback((updater) => {
     setContentState(prev => {
@@ -3222,7 +3488,7 @@ function App() {
         </React.Fragment>
       );
     }
-    if (active === "estadisticas") return <SectionView view="estadisticas" content={content}><StatsBody toast={toast} initialInstitution={subview.estadisticas} onSubChange={(sub)=>setSub("estadisticas", sub)} /></SectionView>;
+    if (active === "estadisticas") return <SectionView view="estadisticas" content={content}><StatsBody toast={toast} initialTheme={subview.estadisticas} onSubChange={(sub)=>setSub("estadisticas", sub)} /></SectionView>;
     if (active === "investigacion") return <SectionView view="investigacion" content={content}><ResearchPapersBody toast={toast} onSubmit={addSubmission} repo={repo} /></SectionView>;
     if (active === "blog") return <SectionView view="blog" content={content}><BlogBody toast={toast} onSubmit={addSubmission} initialMode={subview.blog} onSubChange={(sub)=>setSub("blog", sub)} /></SectionView>;
     if (active === "formacion") return <SectionView view="formacion" content={content}><FormationBody /></SectionView>;
