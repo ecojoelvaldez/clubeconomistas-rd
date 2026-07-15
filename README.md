@@ -40,17 +40,23 @@ Los indicadores del sistema financiero (morosidad, solvencia, ROE, ROA) vienen d
 API de la Superintendencia de Bancos, que requiere clave. Como un sitio estático no
 puede guardar un secret, la clave vive **solo en GitHub Actions**:
 
-- `.github/workflows/sib-snapshot.yml` corre a diario (y a demanda) usando el secret
+- La API v2 expone `indicadores/financieros` en formato *long*: filas
+  `{ periodo, entidad, tipo_entidad, indicador, valor }` con agregados `entidad="TODOS"`
+  por tipo (BM = Bancos Múltiples, AAyP, BAyC). El sitio muestra el agregado de
+  **Bancos Múltiples** (`entidad=TODOS, tipo_entidad=BM`) para: **morosidad, ROE, ROA y
+  eficiencia (CTI)**. La *solvencia* no está en este endpoint.
+- `scripts/fetch-sib.mjs` obtiene las filas —de la API (`SIB_API_BASE` + la clave), de
+  un snapshot remoto (`SIB_SNAPSHOT_URL`), o del snapshot local `data/sib_snapshot.json`—
+  las filtra y escribe una serie por indicador en `data/series/sib_*.json`.
+- `.github/workflows/sib-snapshot.yml` corre a diario (y a demanda) con el secret
   `SIB_SUBSCRIPTION_KEY` (subscription key de Azure APIM, cabecera
-  `Ocp-Apim-Subscription-Key`), ejecuta `scripts/fetch-sib.mjs` y commitea los datos a
-  `data/series/sib_*.json`. La clave nunca toca el navegador. El secret debe existir en
-  **este** repositorio (o en la organización con acceso a este repo); un secret que solo
-  vive en otro repo no es visible para esta Action.
-- `scripts/sib-sources.json` es la configuración: endpoint y mapeo de campos de cada
-  indicador. **Falta rellenar los `path`** con los endpoints reales de la SIB (y
-  confirmar `authHeader` y el nombre del secret).
-- El sitio lee esos snapshots como series locales (`kind: "local"`). Mientras no haya
-  corrido la Action, los indicadores muestran un estado vacío.
+  `Ocp-Apim-Subscription-Key`). La clave nunca toca el navegador. **El secret debe existir
+  en este repositorio** (o en su organización); uno que solo vive en otro repo no es
+  visible para esta Action.
+- `scripts/sib-sources.json` es la configuración (endpoint, filtro e indicadores).
+- El sitio lee los snapshots como series locales (`kind: "local"`). Se incluye un snapshot
+  real hasta 2026-05; para refrescarlo automáticamente, define la variable de repo
+  `SIB_API_BASE` (URL base de la API) o `SIB_SNAPSHOT_URL`.
 
 ### Cómo se resuelve el CORS de los datos globales
 FRED y Yahoo no envían cabeceras CORS abiertas, así que el fetch directo falla en el

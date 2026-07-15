@@ -1755,27 +1755,27 @@ const CURATED = [
 
   { key:"sib_morosidad", panel:"do", theme:"Sistema financiero · SIB", title:"Morosidad de la cartera",
     freq:"Mensual", unitLabel:"% de la cartera (vencida / total)", fmt:"pct", dec:2, sign:"invert",
-    blurb:"La alerta temprana del sistema. El índice de morosidad —cartera vencida sobre cartera total— mide cuánto del crédito no se está pagando. Suele subir cuando la economía se enfría o las tasas aprietan a los deudores; una morosidad baja y estable es señal de un sistema sano.",
-    src:"SIB · Superintendencia de Bancos", srcUrl:"https://www.sb.gob.do/",
+    blurb:"La alerta temprana del sistema. El índice de morosidad —cartera vencida sobre cartera total de los bancos múltiples— mide cuánto del crédito no se está pagando. Suele subir cuando la economía se enfría o las tasas aprietan a los deudores; una morosidad baja y estable es señal de un sistema sano.",
+    src:"SIB · Bancos Múltiples", srcUrl:"https://www.sb.gob.do/",
     load:{ kind:"local", id:"sib_morosidad" } },
-
-  { key:"sib_solvencia", panel:"do", theme:"Sistema financiero · SIB", title:"Índice de solvencia",
-    freq:"Mensual", unitLabel:"% (patrimonio técnico / activos ponderados)", fmt:"pct", dec:1, sign:"normal",
-    blurb:"El colchón del sistema frente a pérdidas. La solvencia mide el capital de los bancos contra sus activos ponderados por riesgo; el mínimo regulatorio en la RD es 10%. Cuanto más alto, mayor la capacidad del sistema para absorber golpes sin comprometer los depósitos.",
-    src:"SIB · Superintendencia de Bancos", srcUrl:"https://www.sb.gob.do/",
-    load:{ kind:"local", id:"sib_solvencia" } },
 
   { key:"sib_roe", panel:"do", theme:"Sistema financiero · SIB", title:"Rentabilidad · ROE",
     freq:"Mensual", unitLabel:"% (retorno sobre patrimonio)", fmt:"pct", dec:1, sign:"normal",
     blurb:"Qué tan rentable es el negocio bancario. El ROE —beneficio sobre patrimonio— resume la salud y eficiencia del sistema; niveles sólidos atraen capital y refuerzan la solvencia, pero un ROE muy por encima de la región puede reflejar poca competencia y márgenes altos.",
-    src:"SIB · Superintendencia de Bancos", srcUrl:"https://www.sb.gob.do/",
+    src:"SIB · Bancos Múltiples", srcUrl:"https://www.sb.gob.do/",
     load:{ kind:"local", id:"sib_roe" } },
 
   { key:"sib_roa", panel:"do", theme:"Sistema financiero · SIB", title:"Rentabilidad · ROA",
     freq:"Mensual", unitLabel:"% (retorno sobre activos)", fmt:"pct", dec:2, sign:"normal",
     blurb:"La rentabilidad ajustada por el tamaño del balance. El ROA —beneficio sobre activos totales— complementa al ROE: aísla la eficiencia con que los bancos ponen a trabajar sus activos, sin el efecto del apalancamiento.",
-    src:"SIB · Superintendencia de Bancos", srcUrl:"https://www.sb.gob.do/",
+    src:"SIB · Bancos Múltiples", srcUrl:"https://www.sb.gob.do/",
     load:{ kind:"local", id:"sib_roa" } },
+
+  { key:"sib_eficiencia", panel:"do", theme:"Sistema financiero · SIB", title:"Eficiencia · costo/ingreso",
+    freq:"Mensual", unitLabel:"% (índice costo/ingreso, CTI)", fmt:"pct", dec:1, sign:"invert",
+    blurb:"Cuánto cuesta operar el banco por cada peso que ingresa. El índice costo/ingreso (CTI) mide la eficiencia operativa: cuanto más bajo, más eficiente es la banca. Es la contraparte de la rentabilidad y clave para leer si las ganancias vienen de eficiencia o de márgenes altos.",
+    src:"SIB · Bancos Múltiples", srcUrl:"https://www.sb.gob.do/",
+    load:{ kind:"local", id:"sib_eficiencia" } },
 
   /* ——————————————————————— GLOBAL & MERCADOS (en vivo) ——————————————————————— */
   { key:"fedfunds", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Tasa de la Reserva Federal",

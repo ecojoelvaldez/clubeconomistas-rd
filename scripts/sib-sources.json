@@ -1,47 +1,16 @@
 {
-  "_comment": "Config de la descarga de la API de la SIB (Superintendencia de Bancos). El script scripts/fetch-sib.mjs lee este archivo, llama a cada endpoint con la subscription key (GitHub secret SIB_SUBSCRIPTION_KEY en la cabecera authHeader: Ocp-Apim-Subscription-Key) y guarda un snapshot en data/series/<file>.json. Rellena 'path' con el endpoint real de cada indicador y ajusta dateKey/valueKey/scale al formato de la respuesta. Deja 'path' vacío para omitir un indicador.",
-  "base": "https://apis.sb.gob.do",
-  "authHeader": "Ocp-Apim-Subscription-Key",
+  "_comment": "Config de la descarga de indicadores de la SIB (Superintendencia de Bancos). La API v2 expone un endpoint 'indicadores/financieros' en formato long: filas { periodo, entidad, tipo_entidad, indicador, valor }, con agregados entidad='TODOS' por tipo (BM=Bancos Múltiples, AAyP, BAyC). El script scripts/fetch-sib.mjs toma esas filas, filtra por 'filter' y por 'indicador', y escribe un snapshot por indicador en data/series/<file>.json.",
+  "_fuente": "El script obtiene las filas, en este orden: (1) si SIB_API_BASE está definido, llama a {SIB_API_BASE}/{endpoint} con la subscription key (secret SIB_SUBSCRIPTION_KEY) en la cabecera authHeader; (2) si SIB_SNAPSHOT_URL está definido, descarga ese JSON; (3) si no, lee el snapshot local 'localSnapshot' (formato del observatorio). Solo indicadores presentes en la fuente: activos, morosidad, roa, roe, cti. La solvencia NO está en este endpoint.",
+  "source": {
+    "endpoint": "indicadores/financieros",
+    "authHeader": "Ocp-Apim-Subscription-Key",
+    "localSnapshot": "data/sib_snapshot.json"
+  },
+  "filter": { "entidad": "TODOS", "tipo_entidad": "BM" },
   "indicators": [
-    {
-      "file": "sib_morosidad",
-      "nombre": "Índice de morosidad del sistema financiero",
-      "unidad": "percent",
-      "path": "",
-      "query": {},
-      "dateKey": "periodo",
-      "valueKey": "valor",
-      "scale": 1
-    },
-    {
-      "file": "sib_solvencia",
-      "nombre": "Índice de solvencia del sistema financiero",
-      "unidad": "percent",
-      "path": "",
-      "query": {},
-      "dateKey": "periodo",
-      "valueKey": "valor",
-      "scale": 1
-    },
-    {
-      "file": "sib_roe",
-      "nombre": "Rentabilidad del patrimonio (ROE)",
-      "unidad": "percent",
-      "path": "",
-      "query": {},
-      "dateKey": "periodo",
-      "valueKey": "valor",
-      "scale": 1
-    },
-    {
-      "file": "sib_roa",
-      "nombre": "Rentabilidad de los activos (ROA)",
-      "unidad": "percent",
-      "path": "",
-      "query": {},
-      "dateKey": "periodo",
-      "valueKey": "valor",
-      "scale": 1
-    }
+    { "file": "sib_morosidad", "indicador": "morosidad", "nombre": "Morosidad de la cartera · Bancos Múltiples", "unidad": "percent", "scale": 1 },
+    { "file": "sib_roe", "indicador": "roe", "nombre": "Rentabilidad del patrimonio (ROE) · Bancos Múltiples", "unidad": "percent", "scale": 1 },
+    { "file": "sib_roa", "indicador": "roa", "nombre": "Rentabilidad de los activos (ROA) · Bancos Múltiples", "unidad": "percent", "scale": 1 },
+    { "file": "sib_eficiencia", "indicador": "cti", "nombre": "Eficiencia (costo/ingreso, CTI) · Bancos Múltiples", "unidad": "percent", "scale": 1 }
   ]
 }

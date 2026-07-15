@@ -30,6 +30,10 @@ jobs:
       - name: Descargar indicadores de la SIB
         env:
           SIB_SUBSCRIPTION_KEY: ${{ secrets.SIB_SUBSCRIPTION_KEY }}
+          # Opcionales (variables del repo): fuente en vivo. Si ambos están vacíos,
+          # el script deriva las series del snapshot local data/sib_snapshot.json.
+          SIB_API_BASE: ${{ vars.SIB_API_BASE }}
+          SIB_SNAPSHOT_URL: ${{ vars.SIB_SNAPSHOT_URL }}
         run: node scripts/fetch-sib.mjs
 
       - name: Commitear snapshots si cambiaron
