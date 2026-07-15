@@ -1,0 +1,45 @@
+name: Snapshot indicadores SIB
+
+# Descarga los indicadores del sistema financiero desde la API de la
+# Superintendencia de Bancos usando el secret SIB_API_KEY (nunca se expone al
+# sitio) y commitea los snapshots JSON a data/series/. El sitio estático los lee
+# como cualquier otra serie local.
+
+on:
+  schedule:
+    - cron: "0 10 * * *"   # diario 10:00 UTC (~06:00 RD). Los datos bancarios son mensuales.
+  workflow_dispatch: {}     # permite ejecutarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sib-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Descargar indicadores de la SIB
+        env:
+          SIB_API_KEY: ${{ secrets.SIB_API_KEY }}
+        run: node scripts/fetch-sib.mjs
+
+      - name: Commitear snapshots si cambiaron
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain data/series)" ]; then
+            git add data/series/sib_*.json
+            git commit -m "chore(datos): actualizar snapshots de la SIB [skip ci]"
+            git push
+          else
+            echo "Sin cambios en los snapshots de la SIB."
+          fi

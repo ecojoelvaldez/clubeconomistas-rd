@@ -1,0 +1,47 @@
+{
+  "_comment": "Config de la descarga de la API de la SIB (Superintendencia de Bancos). El script scripts/fetch-sib.mjs lee este archivo, llama a cada endpoint con la clave (GitHub secret SIB_API_KEY en la cabecera authHeader) y guarda un snapshot en data/series/<file>.json. Rellena 'path' con el endpoint real de cada indicador y ajusta dateKey/valueKey/scale al formato de la respuesta. Deja 'path' vacío para omitir un indicador.",
+  "base": "https://apis.sb.gob.do",
+  "authHeader": "Ocp-Apim-Subscription-Key",
+  "indicators": [
+    {
+      "file": "sib_morosidad",
+      "nombre": "Índice de morosidad del sistema financiero",
+      "unidad": "percent",
+      "path": "",
+      "query": {},
+      "dateKey": "periodo",
+      "valueKey": "valor",
+      "scale": 1
+    },
+    {
+      "file": "sib_solvencia",
+      "nombre": "Índice de solvencia del sistema financiero",
+      "unidad": "percent",
+      "path": "",
+      "query": {},
+      "dateKey": "periodo",
+      "valueKey": "valor",
+      "scale": 1
+    },
+    {
+      "file": "sib_roe",
+      "nombre": "Rentabilidad del patrimonio (ROE)",
+      "unidad": "percent",
+      "path": "",
+      "query": {},
+      "dateKey": "periodo",
+      "valueKey": "valor",
+      "scale": 1
+    },
+    {
+      "file": "sib_roa",
+      "nombre": "Rentabilidad de los activos (ROA)",
+      "unidad": "percent",
+      "path": "",
+      "query": {},
+      "dateKey": "periodo",
+      "valueKey": "valor",
+      "scale": 1
+    }
+  ]
+}

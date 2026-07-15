@@ -35,6 +35,20 @@ Cada indicador declara su `load` (`kind: local | fred | yahoo | imf`), su format
 proyecciones WEO a futuro para no mostrar un pronóstico como dato). Series largas se
 reducen (downsample) a ~220 puntos.
 
+### Sistema financiero (SIB) — snapshots vía GitHub Action
+Los indicadores del sistema financiero (morosidad, solvencia, ROE, ROA) vienen de la
+API de la Superintendencia de Bancos, que requiere clave. Como un sitio estático no
+puede guardar un secret, la clave vive **solo en GitHub Actions**:
+
+- `.github/workflows/sib-snapshot.yml` corre a diario (y a demanda) usando el secret
+  `SIB_API_KEY`, ejecuta `scripts/fetch-sib.mjs` y commitea los datos a
+  `data/series/sib_*.json`. La clave nunca toca el navegador.
+- `scripts/sib-sources.json` es la configuración: endpoint y mapeo de campos de cada
+  indicador. **Falta rellenar los `path`** con los endpoints reales de la SIB (y
+  confirmar `authHeader` y el nombre del secret).
+- El sitio lee esos snapshots como series locales (`kind: "local"`). Mientras no haya
+  corrido la Action, los indicadores muestran un estado vacío.
+
 ### Cómo se resuelve el CORS de los datos globales
 FRED y Yahoo no envían cabeceras CORS abiertas, así que el fetch directo falla en el
 navegador. `fetchTextWithCors` (compartido con las Noticias) intenta, en orden:
