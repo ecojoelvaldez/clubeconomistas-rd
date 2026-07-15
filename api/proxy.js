@@ -11,6 +11,8 @@
 const ALLOWED_HOST_SUFFIXES = [
   "stlouisfed.org",       // FRED (fredgraph.csv)
   "finance.yahoo.com",    // Yahoo Finance (chart API)
+  "imf.org",              // FMI · DataMapper (WEO)
+  "worldbank.org",        // Banco Mundial (por si se amplía)
   "diariolibre.com",      // Noticias
   "eldinero.com.do",      // Noticias
   "bancentral.gov.do",    // Noticias BCRD

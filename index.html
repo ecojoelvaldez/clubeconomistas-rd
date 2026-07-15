@@ -1181,7 +1181,7 @@ function Nav({ active, go, subview, content }) {
   const drawerChoose = (id, item) => { closeDrawer(); go(id, item); };
   const groups = [
     { id:"inicio", label:"Inicio" },
-    { id:"estadisticas", label:"Estadísticas", items:["Actividad y crecimiento","Precios y política monetaria","Sector externo","Fiscal y deuda","Mercado de valores","Tasas y bonos · EE.UU.","Mercados y materias primas"] },
+    { id:"estadisticas", label:"Estadísticas", items:["Actividad y crecimiento","Precios y política monetaria","Sector externo","Fiscal y deuda","Finanzas públicas · FMI","Mercado de valores","Tasas y bonos · EE.UU.","Mercados y materias primas"] },
     { id:"investigacion", label:"Investigación" },
     { id:"blog", label:"Blog", items:["Blogstop","Discusiones internacionales"] },
     { id:"formacion", label:"Formación" },
@@ -1735,6 +1735,24 @@ const CURATED = [
     src:"SIMV · Mercado primario", srcUrl:"https://simv.gob.do/",
     load:{ kind:"local", id:"CE-SER-2026-0055", variable:"cantidad_valor_nominal_colocada", where:{ field:"moneda", value:"DOP" }, aggregate:"sum", scale:0.000001 } },
 
+  { key:"balance_fiscal", panel:"do", theme:"Finanzas públicas · FMI", title:"Balance fiscal",
+    freq:"Anual", unitLabel:"% del PIB (préstamo/endeudamiento neto)", fmt:"pct", dec:1, sign:"normal", live:true,
+    blurb:"El resultado de las cuentas del Estado. El balance del gobierno general —ingresos menos gastos, incluidos intereses— muestra si el país gasta más de lo que recauda; un déficit persistente es lo que empuja la deuda al alza. Estimaciones del FMI (WEO).",
+    src:"FMI · WEO (DataMapper)", srcUrl:"https://www.imf.org/external/datamapper/GGXCNL_NGDP@WEO/DOM",
+    load:{ kind:"imf", imfId:"GGXCNL_NGDP" } },
+
+  { key:"ingresos_gob", panel:"do", theme:"Finanzas públicas · FMI", title:"Ingresos del gobierno",
+    freq:"Anual", unitLabel:"% del PIB", fmt:"pct", dec:1, sign:"normal", live:true,
+    blurb:"Cuánto capta el Estado en relación al tamaño de la economía. La República Dominicana tiene una de las presiones fiscales más bajas de la región; subir estos ingresos de forma sostenible es el debate fiscal de fondo del país. Estimaciones del FMI (WEO).",
+    src:"FMI · WEO (DataMapper)", srcUrl:"https://www.imf.org/external/datamapper/GGR_NGDP@WEO/DOM",
+    load:{ kind:"imf", imfId:"GGR_NGDP" } },
+
+  { key:"gasto_gob", panel:"do", theme:"Finanzas públicas · FMI", title:"Gasto del gobierno",
+    freq:"Anual", unitLabel:"% del PIB", fmt:"pct", dec:1, sign:"neutral", live:true,
+    blurb:"El tamaño del Estado en la economía. El gasto total del gobierno general frente al PIB permite comparar el peso del sector público dominicano con el de sus pares y leer la contraparte del balance fiscal. Estimaciones del FMI (WEO).",
+    src:"FMI · WEO (DataMapper)", srcUrl:"https://www.imf.org/external/datamapper/GGX_NGDP@WEO/DOM",
+    load:{ kind:"imf", imfId:"GGX_NGDP" } },
+
   /* ——————————————————————— GLOBAL & MERCADOS (en vivo) ——————————————————————— */
   { key:"fedfunds", panel:"global", theme:"Tasas y bonos · EE.UU.", title:"Tasa de la Reserva Federal",
     freq:"Mensual", unitLabel:"% anual (Fed Funds)", fmt:"pct", dec:2, sign:"neutral", live:true,
@@ -1922,11 +1940,29 @@ async function loadYahooPoints({ symbol, range = "5y", interval = "1wk" }) {
   return out;
 }
 
+// FMI · DataMapper (WEO). Anual, en % del PIB. Trae actuales + estimaciones;
+// se recortan las proyecciones a futuro para no mostrar un pronóstico como dato.
+async function loadImfPoints({ imfId, iso = "DOM" }) {
+  const url = "https://www.imf.org/external/datamapper/api/v1/" + imfId + "/" + iso;
+  const txt = await fetchTextWithCors(url);
+  const j = JSON.parse(txt);
+  const series = j && j.values && j.values[imfId] && j.values[imfId][iso];
+  if (!series) throw new Error("Sin datos del FMI");
+  const maxYear = new Date().getFullYear();
+  const out = Object.keys(series)
+    .map(y => ({ t: y, v: +series[y], _d: y }))
+    .filter(o => o.v != null && !isNaN(o.v) && (parseInt(o.t, 10) || 0) <= maxYear)
+    .sort((a, b) => (a._d < b._d ? -1 : a._d > b._d ? 1 : 0));
+  if (!out.length) throw new Error("Sin datos del FMI");
+  return out;
+}
+
 async function loadCuratedPoints(load) {
   let pts;
   if (load.kind === "local") pts = await loadLocalPoints(load);
   else if (load.kind === "fred") pts = await loadFredPoints(load);
   else if (load.kind === "yahoo") pts = await loadYahooPoints(load);
+  else if (load.kind === "imf") pts = await loadImfPoints(load);
   else return [];
   // Transformaciones (sobre la serie ya ordenada). yoy primero, luego escala.
   if (load.transform === "yoy") {

@@ -18,18 +18,22 @@ la constante `CURATED` dentro de `index.html`: pocos indicadores —los que de v
 mueven la economía— agrupados por tema y presentados con contexto editorial, lectura
 formateada (con su unidad real) y enlace a la fuente. Se organiza en dos paneles:
 
-- **Dominicana** (13 indicadores, se leen del master local en `data/series/`):
+- **Dominicana** (indicadores del master local + fiscales del FMI en vivo):
   IMAE, PIB nominal, ocupados, inflación subyacente, TPM, tasa activa, tipo de cambio,
-  reservas, remesas, cuenta corriente, turismo, deuda/PIB y recaudación DGII.
+  reservas, remesas, cuenta corriente, turismo, deuda/PIB, recaudación DGII y emisiones
+  de renta fija en RD$ (SIMV / mercado de valores) desde el master; más balance fiscal,
+  ingresos y gasto del gobierno (% del PIB) desde el **FMI · DataMapper (WEO)** en vivo.
 - **Global & mercados** (10 indicadores, se cargan **en vivo** desde el navegador):
   Fed Funds, Treasury 10a, pendiente 10a−2a, inflación de EE.UU., WTI, índice del dólar,
   VIX, S&P 500 y Bitcoin vía **FRED** (`fredgraph.csv`, sin API key); oro vía
   **Yahoo Finance** (`chart` API).
 
-Cada indicador declara su `load` (`kind: local | fred | yahoo`), su formato (`fmt`),
-su signo semántico (`sign`) y transformaciones opcionales (`scale`, `aggregate`,
-`transform: "yoy"`). Los cargadores viven en `loadLocalPoints` / `loadFredPoints` /
-`loadYahooPoints`. Series largas se reducen (downsample) a ~220 puntos.
+Cada indicador declara su `load` (`kind: local | fred | yahoo | imf`), su formato
+(`fmt`), su signo semántico (`sign`) y transformaciones opcionales (`scale`,
+`aggregate`, `where`, `transform: "yoy"`). Los cargadores viven en `loadLocalPoints`
+/ `loadFredPoints` / `loadYahooPoints` / `loadImfPoints` (el del FMI recorta las
+proyecciones WEO a futuro para no mostrar un pronóstico como dato). Series largas se
+reducen (downsample) a ~220 puntos.
 
 ### Cómo se resuelve el CORS de los datos globales
 FRED y Yahoo no envían cabeceras CORS abiertas, así que el fetch directo falla en el
