@@ -2,17 +2,18 @@
 
 Econometría de Series de Tiempo. Estimación de un VAR y su contraparte estructural
 (SVAR) para la dinámica del mercado laboral dominicano con **datos trimestrales del
-BCRD, 2018Q1–2025Q4**, tomados del master de datos público del Club
-(`data/series/*.json`).
+BCRD, 2016Q1–2025Q4** (cuentas nacionales, ENCFT e IPC). Ocupados y tasa de
+desocupación coinciden con las series del master del Club (`CE-SER-2026-0014`); el
+salario es dato observado (salario por hora de la ENCFT).
 
 La tarea se entrega **resuelta para dos estudiantes**, cada uno con una
-especificación propia (ordenamiento de identificación, criterio de rezagos y variable
+especificación propia (ordenamiento de identificación, número de rezagos y variable
 de robustez distintos), pero sobre los mismos datos reales:
 
 | Carpeta | Estudiante | Ordenamiento SVAR | Rezago (criterio) | Robustez |
 |---|---|---|---|---|
-| `joel-valdez/` | Joel Valdez | base de la consigna (actividad → precios → salarios → empleo → desempleo) | p=1 (AIC) | + TPM |
-| `robert-cueto/` | Robert Cueto | alternativo bloque real-primero (actividad → empleo → desempleo → salarios → precios) | p=1 (BIC) | + Remesas |
+| `joel-valdez/` | Joel Valdez | base de la consigna (actividad → precios → salarios → empleo → desempleo) | p=2 (AIC) | + TPM |
+| `robert-cueto/` | Robert Cueto | alternativo (actividad → precios → empleo → salario real → desempleo) | p=1 (BIC) | + Remesas |
 
 Cada carpeta contiene los cuatro anexos exigidos:
 
@@ -27,21 +28,21 @@ Cada carpeta contiene los cuatro anexos exigidos:
   figuras/                 # Todas las figuras generadas (8 PNG)
 ```
 
-## Datos (todos reales del BCRD salvo el salario)
+## Datos (BCRD, 2016Q1–2025Q4)
 
-| Variable | Serie del master | ID |
+| Variable | Contenido | Fuente |
 |---|---|---|
-| Actividad real (proxy PIB) | IMAE base 2018 | CE-SER-2026-0039 |
-| Ocupados / PEA / Desocupados | PET total (ENCFT) | CE-SER-2026-0014 |
-| IPC | Costo de la canasta nacional | CE-SER-2026-0029 |
-| TPM | Tasa de política monetaria | CE-SER-2026-0032 |
-| Remesas | Remesas familiares | CE-SER-2026-0037 |
+| Actividad real (PIB) | Índice de PIB desestacionalizado | BCRD, cuentas nacionales |
+| Ocupados / Desocupados | ENCFT (coinciden con `CE-SER-2026-0014`) | BCRD, ENCFT |
+| IPC | Índice de precios al consumidor | BCRD |
+| Salario nominal / real | Salario por hora (RD$) y su deflactado | BCRD, ENCFT |
+| TPM | Tasa de política monetaria | BCRD |
+| Remesas | Remesas familiares (`CE-SER-2026-0037`) | master del Club |
 
-> **Nota:** el master no contiene un índice de salarios del BCRD. El salario real es
-> un **proxy reconstruido** del ingreso laboral real (concepto ENCFT), calibrado a los
-> hechos estilizados publicados, y **debe sustituirse por el ingreso laboral de la
-> ENCFT** en una entrega final. Ver `*/data/README_datos.md`. El código está armado
-> para que solo haya que reemplazar esa columna.
+> El panel base se provee en `*/data/panel_usuario.csv`; se verificó su consistencia
+> (ocupados y desempleo idénticos a la ENCFT del master; identidades internas
+> `inflación = Δlog IPC` y `salario real = log(salario) − log(IPC)`). El **salario es
+> dato observado**, no un proxy. Ver `*/data/README_datos.md`.
 
 ## Reproducir
 

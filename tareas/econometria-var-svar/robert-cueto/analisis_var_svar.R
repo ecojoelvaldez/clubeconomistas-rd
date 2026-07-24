@@ -7,8 +7,8 @@
 # Requiere: vars, urca, tseries, svars, ggplot2, reshape2, zoo
 #   install.packages(c("vars","urca","tseries","svars","ggplot2","reshape2","zoo"))
 #
-# Datos: panel trimestral 2018Q1-2025Q4 construido desde el master de datos
-# publico del Club de Economistas (data/series/*.json, fuente BCRD).
+# Datos: panel trimestral 2016Q1-2025Q4 (BCRD: cuentas nacionales, ENCFT, IPC).
+# Ocupados y desempleo coinciden con el master del Club (CE-SER-2026-0014).
 # Ver ../data/panel_trimestral.csv y ../data/README_datos.md
 # =============================================================================
 
@@ -24,24 +24,24 @@ panel <- panel[order(panel$date), ]
 ## ---- 2. Construccion de las variables del sistema --------------------------
 # Transformaciones (log-diferencias en % y niveles) segun la consigna.
 dl <- function(x) 100 * diff(log(x))
-crec_pib  <- dl(panel$imae)           # crecimiento de la actividad real (IMAE)
+crec_pib  <- dl(panel$imae)           # crecimiento del PIB real (indice s.a.)
 inflacion <- dl(panel$ipc)            # inflacion trimestral = D log(IPC)
-sal_real  <- dl(panel$sal_real_idx)   # crecimiento del salario real
+sal_real  <- dl(panel$sal_real_idx)   # crecimiento del salario real (dato ENCFT)
 crec_ocu  <- dl(panel$ocupados)       # crecimiento de los ocupados
 desempleo <- panel$tasa_deso[-1]      # tasa de desocupacion (nivel)
 fechas    <- panel$date[-1]
 
 # Ordenamiento recursivo (identificacion contemporanea / modelo AB):
-#   alternativo bloque real-primero (actividad -> empleo -> desempleo -> salarios -> precios)
+#   alternativo (actividad -> precios -> empleo -> salario real -> desempleo)
 Y <- data.frame(
   crec_pib = crec_pib,
+  inflacion = inflacion,
   crec_ocu = crec_ocu,
-  desempleo = desempleo,
   sal_real = sal_real,
-  inflacion = inflacion
+  desempleo = desempleo
 )
-Y <- window(ts(Y, start = c(2018, 2), frequency = 4))
-# recorte al periodo efectivo (se pierde 2018Q1 por la diferenciacion)
+Y <- window(ts(Y, start = c(2016, 2), frequency = 4))
+# recorte al periodo efectivo (se pierde 2016Q1 por la diferenciacion)
 
 ## ---- 3. Analisis exploratorio ----------------------------------------------
 plot.ts(Y, main = "Variables del sistema")
@@ -57,7 +57,7 @@ adf_report <- function(x, nombre) {
 for (j in seq_len(ncol(Y))) adf_report(Y[, j], colnames(Y)[j])
 # Nota: las tasas de crecimiento y la inflacion son estacionarias por
 # construccion; la tasa de desocupacion se trata como I(0) (acotada,
-# reversion a la media). El bajo poder del ADF en muestras cortas (n~31)
+# reversion a la media). El bajo poder del ADF en muestras cortas (n~39)
 # se discute en el informe.
 
 ## ---- 5. Seleccion del numero de rezagos ------------------------------------

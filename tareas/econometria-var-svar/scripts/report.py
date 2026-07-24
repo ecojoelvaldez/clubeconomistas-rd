@@ -76,7 +76,7 @@ def build(cfg_name, results_json, figdir, out_pdf):
               Spacer(1, 0.8*cm),
               Paragraph(f"<b>{student}</b>", SUB),
               Spacer(1, 0.3*cm),
-              Paragraph("Periodo de estudio: 2018Q1 &ndash; 2025Q4 &nbsp;&middot;&nbsp; Datos trimestrales BCRD", SUB),
+              Paragraph("Periodo de estudio: 2016Q1 &ndash; 2025Q4 &nbsp;&middot;&nbsp; Datos trimestrales BCRD", SUB),
               Paragraph("Fuente: master de datos p&uacute;blico del Club de Economistas Dominicanos", SUB),
               Spacer(1, 6.5*cm),
               Paragraph("Informe t&eacute;cnico &middot; Identificaci&oacute;n estructural por restricciones contempor&aacute;neas (esquema recursivo AB)", SUB),
@@ -86,7 +86,7 @@ def build(cfg_name, results_json, figdir, out_pdf):
     story += [Paragraph("1. Introducci&oacute;n", H1)]
     story += [P(f"Este informe estima un modelo Vector Autorregresivo (VAR) y su contraparte "
         f"estructural (SVAR) para caracterizar la din&aacute;mica del mercado laboral dominicano "
-        f"entre 2018 y 2025. El objetivo es cuantificar c&oacute;mo se propagan los choques "
+        f"entre 2016 y 2025. El objetivo es cuantificar c&oacute;mo se propagan los choques "
         f"macroecon&oacute;micos &mdash;de actividad, de precios y de salarios&mdash; sobre el empleo, "
         f"el desempleo y los salarios reales, y qu&eacute; parte de la volatilidad laboral se "
         f"explica por factores reales frente a nominales.")]
@@ -126,36 +126,34 @@ def build(cfg_name, results_json, figdir, out_pdf):
         "(<font face='Courier'>data/series/*.json</font>). Las series mensuales se agregan a "
         "frecuencia trimestral (promedio para &iacute;ndices y tasas; suma para flujos). El cuadro 1 "
         "resume las fuentes.")]
-    dt = [["Variable", "Serie del master (BCRD)", "Frec. origen", "Transformaci&oacute;n"],
-          ["Actividad real", "IMAE base 2018 (CE-SER-2026-0039)", "Mensual", "100&middot;&Delta;log"],
-          ["Ocupados", "PET total &mdash; Ocupados (CE-SER-2026-0014)", "Trimestral", "100&middot;&Delta;log"],
-          ["Tasa de desocupaci&oacute;n", "PET total &mdash; Desocup./PEA (0014)", "Trimestral", "nivel (%)"],
-          ["IPC", "Costo canasta nacional (CE-SER-2026-0029)", "Mensual", "100&middot;&Delta;log"],
-          ["TPM", "Tasa de pol&iacute;tica monetaria (0032)", "Mensual", "nivel (%)"],
-          ["Remesas", "Remesas familiares (CE-SER-2026-0037)", "Mensual", "100&middot;&Delta;log"],
-          ["Salario real (proxy)", "Reconstruido &mdash; ver nota", "Trimestral", "100&middot;&Delta;log"]]
+    dt = [["Variable", "Fuente (BCRD)", "Frecuencia", "Transformaci&oacute;n"],
+          ["Actividad real (PIB)", "&Iacute;ndice de PIB desestacionalizado", "Trimestral", "100&middot;&Delta;log"],
+          ["Ocupados", "ENCFT &mdash; Ocupados", "Trimestral", "100&middot;&Delta;log"],
+          ["Tasa de desocupaci&oacute;n", "ENCFT &mdash; Desocup./PEA", "Trimestral", "nivel (%)"],
+          ["IPC", "&Iacute;ndice de precios al consumidor", "Trimestral (prom.)", "100&middot;&Delta;log"],
+          ["Salario nominal", "Salario por hora (RD$), ENCFT", "Trimestral", "&mdash;"],
+          ["Salario real", "Salario por hora / IPC", "Trimestral", "100&middot;&Delta;log"],
+          ["TPM", "Tasa de pol&iacute;tica monetaria", "Trimestral (prom.)", "nivel (%)"],
+          ["Remesas", "Remesas familiares (master del Club)", "Mensual", "100&middot;&Delta;log"]]
     story += [table([[Paragraph(c, ParagraphStyle('tc',fontName='Helvetica',fontSize=8,leading=10, textColor=colors.white if i==0 else colors.black)) for c in row] for i,row in enumerate(dt)],
                     colw=[3.1*cm,5.6*cm,2.3*cm,3.0*cm])]
-    story += [cap("Cuadro 1. Variables, fuentes en el master del Club (BCRD) y transformaciones.")]
-    story += [P("<b>Nota sobre el salario real.</b> El master del Club no contiene un &iacute;ndice de "
-        "salarios o de ingreso laboral del BCRD. Por ello el salario real se aproxima con un "
-        "<b>&iacute;ndice reconstruido del ingreso laboral real promedio</b> (concepto ENCFT), calibrado "
-        "a los hechos estilizados publicados por el BCRD: estabilidad en 2018&ndash;2019, erosi&oacute;n "
-        "durante 2020&ndash;2022 por el choque inflacionario y recuperaci&oacute;n gradual en "
-        "2023&ndash;2025. Es una <b>serie ilustrativa</b>: para una entrega final debe sustituirse por "
-        "el ingreso laboral promedio de la ENCFT del BCRD (el c&oacute;digo est&aacute; estructurado para "
-        "que solo haya que reemplazar esa columna). Todas las dem&aacute;s series son datos reales del "
-        "BCRD. Esta limitaci&oacute;n se retoma en la secci&oacute;n de discusi&oacute;n.")]
-    story += [P("El IPC se aproxima con el costo de la canasta nacional (base 2019&ndash;2020), cuya "
-        "variaci&oacute;n interanual reproduce con fidelidad la inflaci&oacute;n <i>headline</i> del BCRD "
-        "(&asymp;8% en 2021, &asymp;9% en el pico de 2022, &asymp;3,3% en 2024). La actividad real se "
-        "mide con el IMAE, indicador mensual que el propio BCRD utiliza como aproximaci&oacute;n de "
-        "alta frecuencia del PIB.")]
+    story += [cap("Cuadro 1. Variables, fuentes (BCRD) y transformaciones.")]
+    story += [P("<b>Salario.</b> El salario nominal es el <b>salario por hora en RD$</b> de la ENCFT y el "
+        "salario real se obtiene deflactando por el IPC: salario_real = log(salario/IPC). Se trata de "
+        "un <b>dato observado</b> (no un proxy). La consistencia del panel se verific&oacute;: las series "
+        "de ocupados y de tasa de desocupaci&oacute;n <b>coinciden exactamente</b> con las series de la "
+        "ENCFT del master del Club (CE-SER-2026-0014), y las identidades internas se cumplen "
+        "(inflaci&oacute;n trimestral = &Delta;log IPC; salario real = log(salario) &minus; log(IPC)).")]
+    story += [P("El per&iacute;odo cubre el ciclo completo 2016Q1&ndash;2025Q4, con los tres episodios de "
+        "inter&eacute;s: la recuperaci&oacute;n sostenida de 2016&ndash;2019, el choque de la pandemia (2020) y "
+        "el episodio inflacionario mundial de 2021&ndash;2023 con el endurecimiento monetario "
+        "posterior. Las remesas familiares se toman del master del Club (CE-SER-2026-0037) para el "
+        "ejercicio de robustez.")]
 
     # ---- 4. EXPLORATORIO ----
     story += [PageBreak(), Paragraph("4. An&aacute;lisis exploratorio", H1)]
     story += fig(F("01_series_originales.png"), width=14.5*cm,
-                 caption="Figura 1. Series originales (niveles) del periodo 2018&ndash;2025.")
+                 caption="Figura 1. Series originales (niveles) del periodo 2016&ndash;2025.")
     story += [P("La figura 1 muestra el desplome de la actividad y el empleo en 2020Q2, seguido de "
         "una recuperaci&oacute;n r&aacute;pida. La tasa de desocupaci&oacute;n exhibe el conocido patr&oacute;n "
         "at&iacute;pico de 2020: <i>cae</i> transitoriamente porque muchos trabajadores salieron de la "
@@ -170,13 +168,13 @@ def build(cfg_name, results_json, figdir, out_pdf):
         dd.append([r["variable"], f"{r['mean']:.2f}", f"{r['std']:.2f}", f"{r['min']:.2f}", f"{r['max']:.2f}"])
     story += [table(dd, colw=[4.5*cm,2.2*cm,2.2*cm,2.2*cm,2.2*cm])]
     story += [cap("Cuadro 2. Estad&iacute;sticas descriptivas de las variables del sistema.")]
-    story += [P("La elevada desviaci&oacute;n del crecimiento del IMAE refleja los valores extremos de "
+    story += [P("La elevada desviaci&oacute;n del crecimiento del PIB refleja los valores extremos de "
         "2020. Las medias de los crecimientos son peque&ntilde;as y positivas, coherentes con una "
         "econom&iacute;a en expansi&oacute;n con un episodio recesivo puntual.")]
     story += fig(F("03_correlaciones.png"), width=11*cm,
                  caption="Figura 3. Matriz de correlaciones contempor&aacute;neas.")
     corr = R["correlacion"]; L = R["corr_labels"]
-    ip = L.index("Crec. PIB (IMAE)") if "Crec. PIB (IMAE)" in L else 0
+    ip = L.index("Crec. PIB") if "Crec. PIB" in L else 0
     io = L.index("Crec. ocupados"); idd = L.index("Desempleo (%)")
     story += [P(f"La correlaci&oacute;n contempor&aacute;nea entre actividad y empleo es alta y positiva "
         f"({corr[ip][io]:.2f}), consistente con una relaci&oacute;n de tipo Okun. La correlaci&oacute;n "
@@ -200,7 +198,7 @@ def build(cfg_name, results_json, figdir, out_pdf):
     story += [table(adf_tab(R["adf_modelo"],""), colw=[4.5*cm,2.0*cm,2.0*cm,2.0*cm,1.8*cm])]
     story += [cap("Cuadro 3B. ADF sobre las variables del sistema (transformadas).")]
     story += [P("Las tasas de crecimiento y la inflaci&oacute;n son estacionarias por construcci&oacute;n "
-        "(diferencias de series I(1)). En la muestra corta (n&asymp;31) el ADF tiene bajo poder y "
+        "(diferencias de series I(1)). En la muestra corta (n&asymp;39) el ADF tiene bajo poder y "
         "algunos p-valores quedan en la frontera del 5&ndash;10%, agravado por el <i>outlier</i> de "
         "2020; la teor&iacute;a y el comportamiento gr&aacute;fico respaldan tratarlas como I(0). La tasa "
         "de desocupaci&oacute;n se modela en nivel: es una variable acotada con reversi&oacute;n a la media, "
@@ -268,13 +266,14 @@ def build(cfg_name, results_json, figdir, out_pdf):
             "esquema se verifica en la secci&oacute;n 11 alterando el orden y la composici&oacute;n del "
             "sistema.")]
     else:
-        story += [P("A partir de esas restricciones se adopta un <b>ordenamiento alternativo de "
-            "bloque real&ndash;primero</b> [Crec. PIB, Crec. ocupados, Desempleo, Salario real, "
-            "Inflaci&oacute;n]: las cantidades reales (actividad, empleo, desempleo) son las m&aacute;s "
-            "ex&oacute;genas dentro del trimestre y las variables nominales (salario real, inflaci&oacute;n) "
-            "se ajustan al final por sus rigideces. Este esquema respeta las cinco restricciones "
-            "(el PIB sigue siendo la variable m&aacute;s ex&oacute;gena) y ofrece una lectura complementaria "
-            "al orden base; su robustez se contrasta en la secci&oacute;n 11.")]
+        story += [P("A partir de esas restricciones se adopta un <b>ordenamiento alternativo</b> "
+            "[Crec. PIB, Inflaci&oacute;n, Crec. ocupados, Salario real, Desempleo]: dentro del "
+            "trimestre el empleo y las horas se ajustan m&aacute;s r&aacute;pido que el salario medio &mdash;m&aacute;s "
+            "r&iacute;gido&mdash;, por lo que el empleo precede al salario real; el desempleo cierra el "
+            "sistema. Se conservan las prelaciones esenciales (el PIB es la variable m&aacute;s ex&oacute;gena "
+            "y la inflaci&oacute;n puede transmitirse al salario real dentro del trimestre), de modo que "
+            "el canal inflaci&oacute;n&ndash;salario real sigue identificado. Ofrece una lectura "
+            "complementaria al orden base; su robustez se contrasta en la secci&oacute;n 11.")]
     Pm = R["cholesky_P"]
     dP=[[""]+[l.split(" ")[0]+"." for l in R["corr_labels"]]]
     for i,row in enumerate(Pm):
@@ -323,7 +322,7 @@ def build(cfg_name, results_json, figdir, out_pdf):
         story += [table(fevd_tab(tgt), colw=[5.2*cm,2.4*cm,2.4*cm,2.4*cm])]
         story += [cap(f"Cuadro 7. FEVD de {lbl} (% de la varianza del error de pron&oacute;stico).")]
     f8=R["fevd"]["h8"]
-    dpib=f8["Crec. ocupados"]["Crec. PIB (IMAE)"]
+    dpib=f8["Crec. ocupados"]["Crec. PIB"]
     story += [P(f"El empleo est&aacute; dominado por los choques de actividad: a ocho trimestres el "
         f"Crec. PIB explica cerca de {dpib:.0f}% de su varianza, confirmando que <b>la actividad "
         f"lidera la din&aacute;mica laboral</b>. La varianza del desempleo se reparte entre los choques "
@@ -386,23 +385,22 @@ def build(cfg_name, results_json, figdir, out_pdf):
          "volatilidad laboral. Las anomal&iacute;as (respuesta del desempleo en el impacto) tienen una "
          "lectura econ&oacute;mica clara v&iacute;a participaci&oacute;n."),
         ("&iquest;Qu&eacute; limitaciones presenta el modelo?",
-         "Muestra corta (n&asymp;31) con bajo poder de las pruebas y IRF con bandas amplias; "
-         "dependencia del proxy reconstruido de salario real; identificaci&oacute;n recursiva que impone "
-         "un orden causal contempor&aacute;neo; y fuerte influencia del <i>outlier</i> de 2020 sobre la "
-         "normalidad de los residuos."),
+         "Muestra relativamente corta (n&asymp;39) con IRF de bandas amplias; el salario por hora es "
+         "una medida de ingreso laboral sujeta a revisiones metodol&oacute;gicas de la ENCFT; "
+         "identificaci&oacute;n recursiva que impone un orden causal contempor&aacute;neo; y fuerte "
+         "influencia del <i>outlier</i> de 2020 sobre la normalidad de los residuos."),
         ("&iquest;Qu&eacute; modificaciones introducir&iacute;a para mejorar el an&aacute;lisis?",
-         "Sustituir el salario por el ingreso laboral real de la ENCFT; extender la muestra "
-         "(incorporar 2007&ndash;2017 con el IMAE y un IPC empalmado); usar identificaci&oacute;n por "
-         "restricciones de signo o de largo plazo; a&ntilde;adir variables de pol&iacute;tica (TPM, cr&eacute;dito, "
-         "tipo de cambio real); y controlar expl&iacute;citamente el <i>outlier</i> pand&eacute;mico con "
-         "variables dummy."),
+         "Extender la muestra hacia atr&aacute;s (empalmar series desde 2007) para ganar potencia; usar "
+         "identificaci&oacute;n por restricciones de signo o de largo plazo; a&ntilde;adir variables de pol&iacute;tica "
+         "(cr&eacute;dito, tipo de cambio real); desagregar el empleo por formalidad o sector; y controlar "
+         "expl&iacute;citamente el <i>outlier</i> pand&eacute;mico con variables dummy."),
     ]
     for q,a in QA:
         story += [Paragraph(q, QST), P(a)]
 
     # ---- 13. CONCLUSIONES ----
     story += [Paragraph("13. Conclusiones", H1)]
-    story += [P(f"El sistema VAR(1)/SVAR estimado sobre datos trimestrales del BCRD (2018&ndash;2025) "
+    story += [P(f"El sistema VAR(1)/SVAR estimado sobre datos trimestrales del BCRD (2016&ndash;2025) "
         f"ofrece una caracterizaci&oacute;n coherente del mercado laboral dominicano. La actividad "
         f"econ&oacute;mica es el motor de la din&aacute;mica laboral: sus choques dominan la varianza del "
         f"empleo y se transmiten con rapidez y baja persistencia. Los salarios reales exhiben "

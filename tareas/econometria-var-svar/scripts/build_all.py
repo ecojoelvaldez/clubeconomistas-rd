@@ -11,8 +11,8 @@ def run(*a):
     print("+", " ".join(a))
     subprocess.check_call([sys.executable, *a], cwd=HERE)
 
-# 1. panel maestro
-run("build_panel.py", os.path.join(HERE, "panel_master.csv"))
+# 1. panel maestro (desde el panel provisto por el usuario + remesas del master)
+run("build_panel.py", os.path.join(HERE, "panel_master.csv"), os.path.join(HERE, "panel_usuario.csv"))
 
 for key, folder in STUDENTS.items():
     out = os.path.join(HERE, f"out_{key}")
@@ -32,6 +32,7 @@ for key, folder in STUDENTS.items():
         shutil.copy(os.path.join(out, "figuras", f), os.path.join(dest, "figuras", f))
     # 6. datos
     shutil.copy(os.path.join(HERE, "panel_master.csv"), os.path.join(dest, "data", "panel_trimestral.csv"))
+    shutil.copy(os.path.join(HERE, "panel_usuario.csv"), os.path.join(dest, "data", "panel_usuario.csv"))
     shutil.copy(os.path.join(HERE, "README_datos.md"), os.path.join(dest, "data", "README_datos.md"))
     shutil.copy(os.path.join(HERE, "build_panel.py"), os.path.join(dest, "data", "build_panel.py"))
     print(f"== {folder} listo -> {dest}")

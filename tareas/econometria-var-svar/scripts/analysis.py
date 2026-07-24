@@ -50,17 +50,17 @@ def get_config(name):
             extra_pos=1,
             lag_criterion="bic",     # criterio privilegiado (parsimonia)
             growth="qoq",
-            # ordenamiento alternativo "bloque real primero": actividad y cantidades
-            # (empleo, desempleo) son las mas exogenas; las variables nominales
-            # (salario real, inflacion) se ajustan al final por rigideces nominales.
-            order=["crec_pib","crec_ocu","desempleo","sal_real","inflacion"],
-            order_name="alternativo bloque real-primero (actividad -> empleo -> desempleo -> salarios -> precios)",
+            # ordenamiento alternativo: el empleo/las horas se ajustan dentro del
+            # trimestre antes que el salario medio (mas rigido); por eso el empleo
+            # precede al salario real. El desempleo cierra el sistema.
+            order=["crec_pib","inflacion","crec_ocu","sal_real","desempleo"],
+            order_name="alternativo (actividad -> precios -> empleo -> salario real -> desempleo)",
         ),
     }
     return C[name]
 
 VARLABELS = {
-    "crec_pib":  "Crec. PIB (IMAE)",
+    "crec_pib":  "Crec. PIB",
     "inflacion": "Inflación",
     "sal_real":  "Salario real",
     "crec_ocu":  "Crec. ocupados",
@@ -86,7 +86,7 @@ def build_svar_data(panel, cfg, order=None, extra=None):
         d["tpm"] = df["tpm"]
     elif extra == "remesas":
         d["remesas"] = 100 * np.log(df["remesas"]).diff()
-    d = d.loc["2018-01-01":"2025-12-31"].dropna()
+    d = d.loc["2016-01-01":"2025-12-31"].dropna()
     cols = order if order is not None else cfg["order"]
     return d[cols]
 
@@ -117,11 +117,11 @@ def run(cfg_name, panel_csv, outdir):
                sample_end=str(data.index.max().date()), nobs=int(len(data)))
 
     # ---- 0. series crudas ----
-    raw = panel.loc["2018-01-01":"2025-12-31", ["imae","ocupados","tasa_deso","ipc","sal_real_idx"]]
+    raw = panel.loc["2016-01-01":"2025-12-31", ["imae","ocupados","tasa_deso","ipc","sal_real_idx"]]
     fig, axes = plt.subplots(3, 2, figsize=(9, 8))
-    titles = {"imae":"IMAE (indice, base 2018=100)","ocupados":"Ocupados (personas)",
-              "tasa_deso":"Tasa de desocupacion (%)","ipc":"IPC / canasta (indice)",
-              "sal_real_idx":"Salario real (indice, proxy)"}
+    titles = {"imae":"PIB (índice, s.a.)","ocupados":"Ocupados (personas)",
+              "tasa_deso":"Tasa de desocupación (%)","ipc":"IPC (índice prom. trim.)",
+              "sal_real_idx":"Salario real (índice)"}
     for ax,(k,t) in zip(axes.flat, titles.items()):
         ax.plot(raw.index, raw[k], color=col); ax.set_title(t, fontsize=9)
     axes.flat[-1].axis("off")
@@ -160,9 +160,9 @@ def run(cfg_name, panel_csv, outdir):
     # ---- 3. ADF ----
     adf_in = {VARLABELS[v]: data[v] for v in ORDER}
     # tambien niveles log para justificar diferenciacion
-    adf_lvl = {"log(IMAE)": np.log(panel.loc["2018":"2025","imae"]),
-               "log(IPC)":  np.log(panel.loc["2018":"2025","ipc"]),
-               "log(Ocupados)": np.log(panel.loc["2018":"2025","ocupados"])}
+    adf_lvl = {"log(PIB)": np.log(panel.loc["2016":"2025","imae"]),
+               "log(IPC)":  np.log(panel.loc["2016":"2025","ipc"]),
+               "log(Ocupados)": np.log(panel.loc["2016":"2025","ocupados"])}
     res["adf_niveles"] = adf_table(adf_lvl)
     res["adf_modelo"] = adf_table(adf_in)
 
