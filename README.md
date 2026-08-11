@@ -9,7 +9,39 @@ vercel.json           # Headers de cache para /data
 data/
   series_catalog.json # Catálogo ligero de las 57 series
   catalog_*.json      # Catálogo por institución
+  papers_catalog.json # Repositorio de investigación (CEPAL)
+  papers_bcrd_concurso.json  # Premios del Concurso de Economía BCRD
   series/CE-SER-2026-XXXX.json  # Observaciones, cargadas bajo demanda
+scripts/
+  build_bcrd_catalog.py  # Regenera papers_bcrd_concurso.json
+```
+
+## Investigación: premios del Concurso BCRD
+`data/papers_bcrd_concurso.json` (63 entradas) recoge los trabajos premiados del
+**Concurso Anual de Economía Biblioteca «Juan Pablo Duarte»** del Banco Central de la
+República Dominicana y los volúmenes anuales de la serie *Nueva literatura económica
+dominicana* que los compilan. No se aloja ningún PDF: cada entrada enlaza al documento
+en el Repositorio Cultural del BCRD, al PDF del CDN institucional o a la colección
+completa de la serie. Se regenera con `python3 scripts/build_bcrd_catalog.py`.
+
+## Blog · Opiniones
+Columnas firmadas por economistas invitados. Se publican desde **Panel admin →
+Opiniones**: nombre, cargo, titular, bajada, artículo completo y una foto **PNG con
+fondo transparente** (hasta 1.5 MB, guardada en base64 junto al artículo). Con Supabase
+activo se guardan en la tabla `club_opiniones`; sin backend quedan en `localStorage`.
+
+```sql
+create table club_opiniones (
+  id text primary key,
+  author text not null,
+  role text,
+  title text not null,
+  standfirst text,
+  body text,
+  photo text,
+  published_at timestamptz default now(),
+  created_at timestamptz default now()
+);
 ```
 
 ## La sección Estadísticas es curada, no un catálogo plano

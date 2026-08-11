@@ -281,22 +281,20 @@
 
   /* ===== MENÚ DE SECCIONES (HOME) ===== */
   .section-menu { padding: 72px 0 88px; }
-  .section-menu-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 30px; }
-  .section-menu-head h2 { font-size: var(--ce-t-h1); }
+  .section-menu-head { margin-bottom: 24px; }
+  .section-menu-head h2 { font-size: var(--ce-t-h2); }
   .section-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .section-card { position: relative; background: var(--ce-paper); border: 1px solid var(--linea); padding: 26px 24px 22px; min-height: 196px; text-align: left; display: flex; flex-direction: column; transition: border-color var(--ce-fast) var(--ce-ease), box-shadow var(--ce-fast) var(--ce-ease); }
+  .section-card { position: relative; background: var(--ce-paper); border: 1px solid var(--linea); padding: 24px 22px 20px; min-height: 132px; text-align: left; display: flex; flex-direction: column; transition: border-color var(--ce-fast) var(--ce-ease), box-shadow var(--ce-fast) var(--ce-ease); }
   .section-card:hover { border-color: var(--ce-rule); box-shadow: 0 16px 40px -28px rgba(0,0,0,.3); }
   /* El sello del documento archivado: chaflán dorado al hover */
   .section-card::after { content: ""; position: absolute; top: 0; right: 0; border-top: 14px solid var(--ce-gold); border-left: 14px solid transparent; opacity: 0; transition: opacity var(--ce-fast) var(--ce-ease); }
   .section-card:hover::after { opacity: 1; }
-  .section-card .num { font-family: var(--ce-body); font-style: italic; font-size: 1.3rem; color: var(--ce-gold-dim); margin-bottom: 16px; }
-  .section-card h3 { font-size: 1.3rem; }
-  .section-card p { font-family: var(--ce-body); color: var(--azul-70); font-size: .98rem; line-height: 1.55; margin-top: 10px; flex: 1; }
-  .section-card .open-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ce-ink); font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; margin-top: 18px; }
+  .section-card h3 { font-size: 1.5rem; }
+  .section-card p { font-family: var(--ce-body); color: var(--azul-70); font-size: .95rem; line-height: 1.5; margin-top: 8px; flex: 1; }
+  .section-card .open-link { display: inline-flex; align-items: center; color: var(--ce-gold-dim); margin-top: 14px; }
   .section-card .open-link .arr, .research-cta .arr { transition: transform var(--ce-fast) var(--ce-ease); }
   .section-card:hover .open-link .arr { transform: translateX(3px); }
-  .admin-entry { background: var(--ce-cream); border-color: var(--oro-20); }
-  @media (max-width: 980px){ .section-grid { grid-template-columns: repeat(2, 1fr); } .section-menu-head { align-items: flex-start; flex-direction: column; } }
+  @media (max-width: 980px){ .section-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 640px){ .section-grid { grid-template-columns: 1fr; } .section-card { min-height: auto; } }
 
   /* ===== VISTAS SECCIONADAS ===== */
@@ -526,6 +524,37 @@
   .draft-preview { border-top: 1px solid var(--linea); margin-top: 18px; padding-top: 16px; }
   .draft-preview h4 { font-family: var(--ce-body); font-weight: 500; font-size: 1.06rem; }
   .draft-preview p { font-family: var(--ce-body); color: var(--azul-70); margin-top: 8px; line-height: 1.6; }
+
+  /* ===== OPINIONES ===== */
+  .opinion-grid { display: grid; gap: 14px; }
+  .opinion-strip { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 22px; padding: 18px 24px 18px 18px; background: var(--ce-paper); border: 1px solid var(--linea); border-left: 3px solid var(--ce-gold); text-align: left; cursor: pointer; transition: border-color var(--ce-fast) var(--ce-ease), box-shadow var(--ce-fast) var(--ce-ease); }
+  .opinion-strip:hover, .opinion-strip:focus-visible { border-color: var(--ce-rule); border-left-color: var(--ce-gold); box-shadow: 0 16px 40px -30px rgba(0,0,0,.35); }
+  .opinion-strip.preview { cursor: default; margin-top: 18px; }
+  .opinion-strip-photo { width: 112px; height: 112px; border-radius: 50%; background: var(--ce-cream); border: 1px solid var(--oro-20); display: grid; place-items: center; overflow: hidden; }
+  .opinion-photo { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .opinion-photo.lg { width: 132px; height: 132px; border-radius: 50%; background: var(--ce-cream); border: 1px solid var(--oro-20); flex-shrink: 0; }
+  .opinion-photo.sm { width: 46px; height: 46px; border-radius: 50%; background: var(--ce-cream); flex-shrink: 0; }
+  .opinion-initials { font-family: var(--ce-display); font-size: 1.7rem; color: var(--ce-gold-dim); }
+  .opinion-byline { display: block; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--ce-gold-dim); }
+  .opinion-role { display: block; font-family: var(--ce-body); font-size: .85rem; color: var(--azul-70); margin-top: 3px; }
+  .opinion-strip-text h3 { font-size: clamp(1.2rem, 2.2vw, 1.6rem); margin-top: 8px; line-height: 1.25; }
+  .opinion-strip-text p { font-family: var(--ce-body); color: var(--azul-70); font-size: .98rem; line-height: 1.55; margin-top: 8px; }
+  .opinion-strip-text .open-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ce-ink); font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; margin-top: 12px; }
+  .opinion-empty { border: 1px dashed var(--ce-rule); padding: 44px 28px; text-align: center; background: var(--ce-cream); }
+  .opinion-empty p { font-family: var(--ce-body); color: var(--azul-70); margin-top: 10px; max-width: 62ch; margin-inline: auto; line-height: 1.6; }
+  .opinion-reader { position: relative; width: min(760px, 100%); max-height: 92vh; overflow: auto; padding: 34px; background: var(--ce-paper); border: 1px solid var(--ce-rule); box-shadow: 0 34px 90px -24px rgba(0,0,0,.4); animation: modalIn 300ms var(--ce-ease); }
+  .opinion-reader .modal-close { position: absolute; top: 18px; right: 18px; }
+  .opinion-reader-head { display: flex; gap: 22px; align-items: center; padding-right: 52px; padding-bottom: 20px; border-bottom: 1px solid var(--linea); }
+  .opinion-reader-head h3 { font-size: clamp(1.4rem, 3vw, 2.1rem); margin-top: 8px; line-height: 1.2; }
+  .opinion-date { display: block; font-family: var(--ce-body); font-size: .85rem; color: var(--azul-70); margin-top: 10px; }
+  .opinion-standfirst { font-family: var(--ce-body); font-style: italic; font-size: 1.1rem; color: var(--ce-ink); line-height: 1.6; margin-top: 20px; }
+  .opinion-body p { font-family: var(--ce-body); color: var(--azul-70); line-height: 1.75; margin-top: 16px; }
+  .admin-opinion-row { display: flex; align-items: center; gap: 14px; }
+  .admin-opinion-row > div { flex: 1; min-width: 0; }
+  @media (max-width: 640px){
+    .opinion-strip { grid-template-columns: 1fr; justify-items: start; gap: 14px; }
+    .opinion-reader-head { flex-direction: column; align-items: flex-start; }
+  }
 
   /* ===== MODAL ===== */
   .modal-backdrop { position: fixed; inset: 0; z-index: var(--z-modal); background: rgba(11,21,38,.6); display: grid; place-items: center; padding: 24px; animation: fadeIn 180ms var(--ce-ease); }
@@ -803,6 +832,51 @@ const db = {
     }
     return { ok: true };
   },
+  // Opiniones de economistas destacados (columnas firmadas).
+  mapOpinion(row) {
+    return {
+      id: row.id,
+      author: row.author || "",
+      role: row.role || "",
+      title: row.title || "",
+      standfirst: row.standfirst || "",
+      body: row.body || "",
+      photo: row.photo || "",
+      date: row.published_at || row.created_at || null,
+      origin: "supabase"
+    };
+  },
+  async getOpiniones() {
+    if (!SB) return null;
+    const { data, error } = await SB
+      .from("club_opiniones")
+      .select("id, author, role, title, standfirst, body, photo, published_at, created_at")
+      .order("published_at", { ascending: false });
+    if (error) { console.error("getOpiniones", error); return null; }
+    return (data || []).map(this.mapOpinion);
+  },
+  async upsertOpinion(item) {
+    if (!SB) return { ok: false, offline: true };
+    const { data: auth } = await SB.auth.getUser();
+    if (!auth?.user) return { ok: false, msg: "Sesión admin requerida" };
+    const row = {
+      id: item.id, author: item.author, role: item.role || null, title: item.title,
+      standfirst: item.standfirst || null, body: item.body || null, photo: item.photo || null,
+      published_at: item.date || new Date().toISOString()
+    };
+    const { error } = await SB.from("club_opiniones").upsert(row);
+    if (error) { console.error("upsertOpinion", error); return { ok: false, msg: error.message }; }
+    await SB.from("auditoria").insert({ act: "a", who: "Admin", what: "publicó opinión", ref_id: item.id });
+    return { ok: true };
+  },
+  async deleteOpinion(id) {
+    if (!SB) return { ok: false, offline: true };
+    const { data: auth } = await SB.auth.getUser();
+    if (!auth?.user) return { ok: false, msg: "Sesión admin requerida" };
+    const { error } = await SB.from("club_opiniones").delete().eq("id", id);
+    if (error) { console.error("deleteOpinion", error); return { ok: false, msg: error.message }; }
+    return { ok: true };
+  },
   // Contenido editable del sitio (Editor del sitio en Admin)
   async getSiteContent() {
     if (!SB) return null;
@@ -907,11 +981,23 @@ function mergePapers(items=[]) {
   return Array.from(seen.values()).sort((a,b) => String(b.year).localeCompare(String(a.year)) || a.title.localeCompare(b.title));
 }
 
+const PAPER_CATALOG_FILES = [
+  { file: "data/papers_catalog.json", origin: "catalog" },
+  { file: "data/papers_bcrd_concurso.json", origin: "bcrd" }
+];
+
 async function loadPaperCatalog() {
-  const res = await fetch("data/papers_catalog.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("No se pudo cargar data/papers_catalog.json");
-  const data = await res.json();
-  return Array.isArray(data) ? data.map(item => normalizePaper(item, "catalog")) : [];
+  const chunks = await Promise.all(PAPER_CATALOG_FILES.map(async ({ file, origin }) => {
+    try {
+      const res = await fetch(file, { cache: "no-store" });
+      if (!res.ok) throw new Error(`No se pudo cargar ${file}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map(item => normalizePaper(item, origin)) : [];
+    } catch (err) { console.error("loadPaperCatalog", file, err); return []; }
+  }));
+  const all = chunks.flat();
+  if (!all.length) throw new Error("Catálogo de papers vacío");
+  return all;
 }
 
 function buildRepoRow(item) {
@@ -1183,7 +1269,7 @@ function Nav({ active, go, subview, content }) {
     { id:"inicio", label:"Inicio" },
     { id:"estadisticas", label:"Estadísticas", items:["Actividad y crecimiento","Precios y política monetaria","Sector externo","Fiscal y deuda","Finanzas públicas · FMI","Mercado de valores","Tasas y bonos · EE.UU.","Mercados y materias primas"] },
     { id:"investigacion", label:"Investigación" },
-    { id:"blog", label:"Blog", items:["Blogstop","Discusiones internacionales"] },
+    { id:"blog", label:"Blog", items:["Opiniones","Blogstop","Discusiones internacionales"] },
     { id:"formacion", label:"Formación" },
     { id:"noticias", label:"Noticias", items:["Noticias económicas","Noticias del Club","Portal de empleos"] },
     { id:"club", label:"Sobre Nosotros", items:["Organigrama","Actividades","Reglamento","Beneficios"] }
@@ -2416,6 +2502,21 @@ function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, conten
   const [tab, setTab] = useState(content ? "sitio" : "cola");
   const [busy, setBusy] = useState(null);
   const [adminPapers, setAdminPapers] = useState(papers);
+  const { opiniones, addOpinion, removeOpinion } = useOpiniones();
+
+  const publishOpinion = async (item) => {
+    addOpinion(item);
+    const res = await db.upsertOpinion(item);
+    if (res.ok) toast("Opinión publicada");
+    else if (res.offline) toast("Opinión publicada localmente · backend no configurado");
+    else toast(res.msg || "Opinión guardada localmente; Supabase no la registró");
+  };
+
+  const dropOpinion = async (item) => {
+    removeOpinion(item.id);
+    const res = await db.deleteOpinion(item.id);
+    toast(res.ok ? "Opinión eliminada" : "Opinión eliminada de este navegador");
+  };
 
   const resolve = async (item, decision) => {
     setBusy(item.id);
@@ -2476,6 +2577,7 @@ function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, conten
         <button className={`admin-tab ${tab==="cola"?"on":""}`} onClick={()=>setTab("cola")}>Cola de aprobación <span className="count">{pending}</span></button>
         <button className={`admin-tab ${tab==="empleos"?"on":""}`} onClick={()=>setTab("empleos")}>Empleos <span className="count">{pendingJobs}</span></button>
         <button className={`admin-tab ${tab==="papers"?"on":""}`} onClick={()=>setTab("papers")}>Investigación <span className="count">{adminPapers.length}</span></button>
+        <button className={`admin-tab ${tab==="opiniones"?"on":""}`} onClick={()=>setTab("opiniones")}>Opiniones <span className="count">{opiniones.length}</span></button>
         <button className={`admin-tab ${tab==="audit"?"on":""}`} onClick={()=>setTab("audit")}>Registro de auditoría</button>
         <button className="admin-tab" style={{marginLeft:"auto"}} onClick={onLogout}>Cerrar sesión</button>
       </div>
@@ -2566,6 +2668,26 @@ function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, conten
         </div>
       )}
 
+      {tab==="opiniones" && (
+        <div className="queue">
+          <AdminOpinionForm toast={toast} onPublish={publishOpinion} />
+          <p className="admin-note">Las opiniones aparecen en Blog · Opiniones. Con Supabase activo se publican para todos; en modo demo quedan guardadas en este navegador.</p>
+          <div className="admin-paper-list">
+            {opiniones.length === 0 && <p className="admin-note">Todavía no hay opiniones publicadas.</p>}
+            {opiniones.map(o => (
+              <div key={o.id} className="admin-paper-row admin-opinion-row">
+                {o.photo && <img className="opinion-photo sm" src={o.photo} alt="" />}
+                <div>
+                  <h4>{o.title}</h4>
+                  <div className="qmeta">{o.author}{o.role ? ` · ${o.role}` : ""} · {opinionDate(o.date)}</div>
+                </div>
+                <button className="qbtn reject" onClick={()=>dropOpinion(o)}>{Ico.x()} Eliminar</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {tab==="audit" && (
         <div className="audit-list">
           {audit.length === 0 && <p className="admin-note">Sin movimientos registrados.</p>}
@@ -2583,10 +2705,200 @@ function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, conten
 }
 
 
+/* ============================== OPINIONES ============================== */
+/* Columnas firmadas por economistas invitados. La foto se guarda como PNG
+   recortado (fondo transparente) en base64 junto al artículo. */
+
+const OPINIONS_KEY = "ce_opiniones_v1";
+
+function loadLocalOpiniones() {
+  try {
+    const raw = localStorage.getItem(OPINIONS_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (err) { return []; }
+}
+
+function saveLocalOpiniones(list) {
+  try { localStorage.setItem(OPINIONS_KEY, JSON.stringify(list)); } catch (err) {}
+}
+
+function mergeOpiniones(items=[]) {
+  const seen = new Map();
+  items.filter(Boolean).forEach(item => { if (item.id && !seen.has(item.id)) seen.set(item.id, item); });
+  return Array.from(seen.values())
+    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+}
+
+function opinionDate(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString("es-DO", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// Estado compartido de opiniones: local primero, Supabase si responde.
+function useOpiniones() {
+  const [list, setList] = useState(() => mergeOpiniones(loadLocalOpiniones()));
+  useEffect(() => {
+    let alive = true;
+    db.getOpiniones().then(remote => {
+      if (!alive || !remote || !remote.length) return;
+      setList(prev => mergeOpiniones([...remote, ...prev]));
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const save = React.useCallback((next) => {
+    const merged = mergeOpiniones(next);
+    saveLocalOpiniones(merged.filter(o => o.origin !== "supabase"));
+    setList(merged);
+    return merged;
+  }, []);
+  const add = React.useCallback((item) => save([item, ...list]), [list, save]);
+  const remove = React.useCallback((id) => save(list.filter(o => o.id !== id)), [list, save]);
+  return { opiniones: list, addOpinion: add, removeOpinion: remove };
+}
+
+function OpinionReader({ item, onClose }) {
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="opinion-reader" onClick={e=>e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} aria-label="Cerrar">{Ico.x()}</button>
+        <div className="opinion-reader-head">
+          {item.photo && <img className="opinion-photo lg" src={item.photo} alt={item.author} />}
+          <div>
+            <span className="opinion-byline">{item.author}</span>
+            {item.role && <span className="opinion-role">{item.role}</span>}
+            <h3>{item.title}</h3>
+            <span className="opinion-date">{opinionDate(item.date)}</span>
+          </div>
+        </div>
+        {item.standfirst && <p className="opinion-standfirst">{item.standfirst}</p>}
+        <div className="opinion-body">
+          {String(item.body || "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OpinionesBoard({ opiniones = [] }) {
+  const [open, setOpen] = useState(null);
+  if (!opiniones.length) {
+    return (
+      <div className="opinion-empty">
+        <h3>Aún no hay opiniones publicadas</h3>
+        <p>Esta sección recoge columnas firmadas por economistas invitados. Se publican desde el panel admin, con la foto del autor en PNG sin fondo y el artículo completo.</p>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <div className="opinion-grid">
+        {opiniones.map(item => (
+          <article key={item.id} className="opinion-strip" onClick={()=>setOpen(item)} role="button" tabIndex={0}
+            onKeyDown={e=>{ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(item); } }}>
+            <div className="opinion-strip-photo">
+              {item.photo
+                ? <img className="opinion-photo" src={item.photo} alt={item.author} />
+                : <span className="opinion-initials">{(item.author || "?").split(/\s+/).slice(0,2).map(w=>w[0]).join("")}</span>}
+            </div>
+            <div className="opinion-strip-text">
+              <span className="opinion-byline">{item.author}</span>
+              {item.role && <span className="opinion-role">{item.role}</span>}
+              <h3>{item.title}</h3>
+              {item.standfirst && <p>{item.standfirst}</p>}
+              <span className="open-link">Leer la opinión {Ico.arr()}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+      {open && <OpinionReader item={open} onClose={()=>setOpen(null)} />}
+    </div>
+  );
+}
+
+function AdminOpinionForm({ toast, onPublish }) {
+  const empty = { author:"", role:"", title:"", standfirst:"", body:"", photo:"", date:"" };
+  const [form, setForm] = useState(empty);
+  const [busy, setBusy] = useState(false);
+  const set = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const readPhoto = (file) => {
+    if (!file) return;
+    if (file.type !== "image/png") { toast("La foto debe ser un PNG (idealmente sin fondo)"); return; }
+    if (file.size > 1.5 * 1024 * 1024) { toast("PNG demasiado pesado: usa uno menor a 1.5 MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => set("photo", String(reader.result || ""));
+    reader.onerror = () => toast("No se pudo leer la imagen");
+    reader.readAsDataURL(file);
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.author.trim() || !form.title.trim() || !form.body.trim()) {
+      toast("Completa autor, título y cuerpo del artículo");
+      return;
+    }
+    setBusy(true);
+    const item = {
+      id: `CE-OPI-${Date.now()}`,
+      author: form.author.trim(),
+      role: form.role.trim(),
+      title: form.title.trim(),
+      standfirst: form.standfirst.trim(),
+      body: form.body.trim(),
+      photo: form.photo,
+      date: form.date ? new Date(form.date).toISOString() : new Date().toISOString(),
+      origin: "local"
+    };
+    await onPublish(item);
+    setBusy(false);
+    setForm(empty);
+  };
+
+  return (
+    <form className="proposal-form admin-opinion-form" onSubmit={submit}>
+      <div className="form-grid">
+        <div className="field"><label>Economista</label><input value={form.author} onChange={e=>set("author", e.target.value)} placeholder="Nombre y apellido" /></div>
+        <div className="field"><label>Cargo o afiliación</label><input value={form.role} onChange={e=>set("role", e.target.value)} placeholder="Ej. Economista · Analista" /></div>
+        <div className="field full"><label>Título de la opinión</label><input value={form.title} onChange={e=>set("title", e.target.value)} placeholder="Titular de la columna" /></div>
+        <div className="field full"><label>Bajada (franja)</label><input value={form.standfirst} onChange={e=>set("standfirst", e.target.value)} placeholder="Una línea que resume la opinión" /></div>
+        <div className="field"><label>Fecha de publicación</label><input type="date" value={form.date} onChange={e=>set("date", e.target.value)} /></div>
+        <div className="field">
+          <label>Foto del autor (PNG sin fondo)</label>
+          <div className="file-drop">
+            <input type="file" accept="image/png" onChange={e=>readPhoto(e.target.files?.[0])} />
+            <p className="file-hint">PNG con fondo transparente, hasta 1.5 MB. Se recorta en círculo sobre la franja.</p>
+          </div>
+        </div>
+        <div className="field full"><label>Artículo completo</label><textarea value={form.body} onChange={e=>set("body", e.target.value)} placeholder="Texto de la columna. Deja una línea en blanco entre párrafos." style={{minHeight:200}} /></div>
+      </div>
+      {(form.photo || form.title) && (
+        <div className="opinion-strip preview">
+          <div className="opinion-strip-photo">
+            {form.photo
+              ? <img className="opinion-photo" src={form.photo} alt="" />
+              : <span className="opinion-initials">{(form.author || "?").split(/\s+/).slice(0,2).map(w=>w[0]).join("")}</span>}
+          </div>
+          <div className="opinion-strip-text">
+            <span className="opinion-byline">{form.author || "Economista invitado"}</span>
+            {form.role && <span className="opinion-role">{form.role}</span>}
+            <h3>{form.title || "Título de la opinión"}</h3>
+            {form.standfirst && <p>{form.standfirst}</p>}
+          </div>
+        </div>
+      )}
+      <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? "Publicando…" : "Publicar opinión"} <span className="arr">{Ico.arr()}</span></button>
+    </form>
+  );
+}
+
 /* ============================== BLOG / PROPUESTAS ============================== */
 
-function BlogBody({ toast, onSubmit, initialMode="Blogstop", onSubChange }) {
-  const modes = ["Blogstop", "Discusiones internacionales"];
+function BlogBody({ toast, onSubmit, initialMode="Opiniones", onSubChange }) {
+  const modes = ["Opiniones", "Blogstop", "Discusiones internacionales"];
+  const { opiniones } = useOpiniones();
   const [mode, setMode] = useState(initialMode);
   useEffect(()=>setMode(initialMode), [initialMode]);
   const [title, setTitle] = useState("");
@@ -2619,12 +2931,14 @@ function BlogBody({ toast, onSubmit, initialMode="Blogstop", onSubChange }) {
     <div>
       <div className="subview-banner">
         <div><span>Canal activo</span><h3>{mode}</h3></div>
-        <p>{mode === "Blogstop" ? "Notas breves, columnas y comentarios sencillos del Club." : "Debates globales de economía para discusión entre miembros."}</p>
+        <p>{mode === "Opiniones" ? "Columnas firmadas por economistas invitados." : mode === "Blogstop" ? "Notas breves, columnas y comentarios sencillos del Club." : "Debates globales de economía para discusión entre miembros."}</p>
       </div>
       <div className="institution-strip">
         {modes.map(m => <button key={m} className={`institution-pill ${m===mode?"on":""}`} onClick={()=>{setMode(m); onSubChange && onSubChange(m);}}>{m}</button>)}
       </div>
-      {mode === "Discusiones internacionales" ? (
+      {mode === "Opiniones" ? (
+        <OpinionesBoard opiniones={opiniones} />
+      ) : mode === "Discusiones internacionales" ? (
         <div className="discussion-grid">
           {INTERNATIONAL_DISCUSSIONS.map(d => (
             <article key={d.thinker} className="discussion-card">
@@ -3046,36 +3360,42 @@ const VIEWS = {
   estadisticas: {
     num: "I",
     title: "Estadísticas",
+    short: "Indicadores de interés económico y financiero",
     kicker: "Repositorio de datos",
     lead: "No un catálogo de series, sino una curaduría: los indicadores que de verdad mueven la economía dominicana, más un tablero global en vivo (FRED y mercados). Cada uno con su contexto, su lectura y su fuente."
   },
   investigacion: {
     num: "II",
     title: "Investigación",
+    short: "Papers y trabajos premiados",
     kicker: "Producción reproducible",
-    lead: "Repositorio de trabajos con datos y código abiertos. Incluye envío formal con título, abstracto, sector, datos y archivos para curaduría."
+    lead: "Repositorio de trabajos con datos y código abiertos. Incluye los premios del Concurso de Economía Biblioteca «Juan Pablo Duarte» del BCRD y el envío formal de propuestas para curaduría."
   },
   blog: {
     num: "III",
-    title: "Blog y propuestas",
+    title: "Blog",
+    short: "Opiniones, columnas y notas",
     kicker: "Publicación curada",
     lead: "Un espacio para comentarios, notas breves y artículos ligeros; separado de los trabajos formales de investigación."
   },
   formacion: {
     num: "IV",
     title: "Formación",
+    short: "Cursos y programas",
     kicker: "Rutas de aprendizaje",
     lead: "Cursos y programas relevantes por área: FMI, MITx, CFA, Coursera, econometría, data science y política pública."
   },
   noticias: {
     num: "V",
     title: "Noticias",
+    short: "Titulares y empleos",
     kicker: "Agregador económico",
     lead: "Titulares de la economía dominicana con enlace a la fuente original. El Club no aloja contenido de terceros."
   },
   club: {
     num: "VI",
     title: "Sobre Nosotros",
+    short: "El Club y sus miembros",
     kicker: "Institución y comunidad",
     lead: "Organigrama, actividades, reglamento y beneficios del Club Economistas."
   },
@@ -3115,7 +3435,7 @@ const DEFAULT_CONTENT = {
     tag: "Indicadores",
     items: SERIES.map(s => ({ name: s.title, val: s.last, delta: s.delta }))
   },
-  home: { menuTitle: "Elige el área que quieres explorar." },
+  home: { menuTitle: "Secciones" },
   views: Object.fromEntries(Object.entries(VIEWS).map(([k, v]) => [k, { kicker: v.kicker, title: v.title, lead: v.lead }])),
   footer: {
     descripcion: "Infraestructura de información económica reproducible para la República Dominicana.",
@@ -3331,26 +3651,16 @@ function SectionMenu({ go, content }) {
     <section className="section-menu">
       <div className="wrap">
         <div className="section-menu-head">
-          <div>
-            <span className="section-kicker">Club Economistas</span>
-            <h2>{(content && content.home && content.home.menuTitle) || "Elige el área que quieres explorar."}</h2>
-          </div>
+          <h2>{(content && content.home && content.home.menuTitle) || "Secciones"}</h2>
         </div>
         <div className="section-grid">
           {cards.map(([id, v]) => (
             <button key={id} className="section-card" onClick={()=>go(id)}>
-              <span className="num">{v.num}</span>
               <h3>{v.title}</h3>
-              <p>{v.lead}</p>
-              <span className="open-link">Abrir sección {Ico.arr()}</span>
+              <p>{v.short || v.title}</p>
+              <span className="open-link">{Ico.arr()}</span>
             </button>
           ))}
-          <button className="section-card admin-entry" onClick={()=>go("admin")}>
-            <span className="num">Admin</span>
-            <h3>Administración</h3>
-            <p>La cola de aprobación deja de estar expuesta como sección pública y pasa a un panel interno.</p>
-            <span className="open-link">Entrar al panel {Ico.arr()}</span>
-          </button>
         </div>
       </div>
     </section>
@@ -3454,7 +3764,7 @@ function Footer({ go, content }) {
 /* ============================== APP ============================== */
 function App() {
   const [active, setActive] = useState("inicio");
-  const [subview, setSubview] = useState({ estadisticas:"Actividad y crecimiento", blog:"Blogstop", noticias:"Noticias económicas", club:"Organigrama" });
+  const [subview, setSubview] = useState({ estadisticas:"Actividad y crecimiento", blog:"Opiniones", noticias:"Noticias económicas", club:"Organigrama" });
   const [content, setContentState] = useState(() => deepMerge(DEFAULT_CONTENT, loadLocalContent() || {}));
   const setContent = React.useCallback((updater) => {
     setContentState(prev => {
