@@ -261,6 +261,7 @@
   .tk-delta { font-size: 11.5px; font-weight: 500; }
   .tk-delta.up { color: var(--verde); }
   .tk-delta.down { color: var(--rojo); }
+  .tk-period { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--azul-50); }
 
   /* ===== BOTONES — tres variantes, un solo efecto ===== */
   .btn { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 9px; font-family: var(--ce-ui); font-size: 14px; font-weight: 600; padding: 14px 26px; border-radius: 0; transition: color var(--ce-mid) var(--ce-ease), border-color var(--ce-mid) var(--ce-ease); }
@@ -411,6 +412,7 @@
   .paper-summary { font-size: 13px; color: var(--azul-50); margin: -4px 0 10px; font-family: var(--ce-body); }
   .paper-summary b { color: var(--ce-ink); font-family: var(--ce-ui); }
   .paper-empty { padding: 28px 8px; color: var(--azul-50); font-family: var(--ce-body); border-bottom: 1px solid var(--linea); }
+  .paper-more { display: flex; justify-content: center; padding: 22px 0 4px; }
   .research-row { display: grid; grid-template-columns: 78px 1fr auto; gap: 26px; align-items: center; padding: 24px 8px; border-bottom: 1px solid var(--linea); transition: background var(--ce-fast) var(--ce-ease), padding-left var(--ce-fast) var(--ce-ease); }
   @media (max-width: 720px){ .research-row { grid-template-columns: 1fr; gap: 10px; padding: 20px 4px; } .paper-toolbar { grid-template-columns: 1fr; } .paper-filter-groups { justify-items: stretch; } }
   .research-row:hover { background: var(--ce-cream); padding-left: 16px; }
@@ -857,8 +859,10 @@ const db = {
   },
   async upsertOpinion(item) {
     if (!SB) return { ok: false, offline: true };
-    const { data: auth } = await SB.auth.getUser();
-    if (!auth?.user) return { ok: false, msg: "Sesión admin requerida" };
+    const { data: auth } = await SB.auth.getUser().catch(() => ({ data: null }));
+    // Sin sesión Supabase (p. ej. acceso local de emergencia) no se puede
+    // publicar para todos: queda guardada en este navegador.
+    if (!auth?.user) return { ok: false, offline: true };
     const row = {
       id: item.id, author: item.author, role: item.role || null, title: item.title,
       standfirst: item.standfirst || null, body: item.body || null, photo: item.photo || null,
@@ -871,8 +875,8 @@ const db = {
   },
   async deleteOpinion(id) {
     if (!SB) return { ok: false, offline: true };
-    const { data: auth } = await SB.auth.getUser();
-    if (!auth?.user) return { ok: false, msg: "Sesión admin requerida" };
+    const { data: auth } = await SB.auth.getUser().catch(() => ({ data: null }));
+    if (!auth?.user) return { ok: false, offline: true };
     const { error } = await SB.from("club_opiniones").delete().eq("id", id);
     if (error) { console.error("deleteOpinion", error); return { ok: false, msg: error.message }; }
     return { ok: true };
@@ -1191,11 +1195,18 @@ function useReveal() {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current; if (!el) return;
+    if (typeof IntersectionObserver === "undefined") { el.classList.add("in"); return; }
+    // Umbral 0: un bloque más alto que la ventana (p. ej. el repositorio de
+    // papers) nunca llegaría a mostrar un % fijo de su altura y se quedaría
+    // invisible. Con 0 basta con que asome por el borde inferior.
     const io = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-    }, { threshold: 0.14, rootMargin: "0px 0px -6% 0px" });
+    }, { threshold: 0, rootMargin: "0px 0px -6% 0px" });
     io.observe(el);
-    return () => io.disconnect();
+    // Red de seguridad: si el observador no dispara (navegación instantánea,
+    // pestaña en segundo plano), el contenido se muestra igual.
+    const t = setTimeout(() => el.classList.add("in"), 900);
+    return () => { clearTimeout(t); io.disconnect(); };
   }, []);
   return ref;
 }
@@ -1575,17 +1586,66 @@ function Hero({ go, content }) {
 }
 
 /* ============================== TICKER DE INDICADORES ============================== */
+/* La franja no muestra cifras escritas a mano: lee el último dato publicado de
+   cada indicador desde el mismo master que alimenta Estadísticas y calcula la
+   variación contra la observación anterior. */
+const TICKER_KEYS = ["imae", "inflacion", "tpm", "tasa_activa", "fx", "reservas", "remesas", "deuda_pib"];
+const TICKER_LABELS = {
+  imae: "IMAE",
+  inflacion: "Inflación subyacente",
+  tpm: "TPM",
+  tasa_activa: "Tasa activa",
+  fx: "Tipo de cambio",
+  reservas: "Reservas brutas",
+  remesas: "Remesas",
+  deuda_pib: "Deuda / PIB"
+};
+
+function useLiveTicker() {
+  const [items, setItems] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const specs = TICKER_KEYS
+      .map(key => CURATED.find(c => c.key === key))
+      .filter(Boolean);
+    Promise.all(specs.map(async spec => {
+      try {
+        const pts = await loadCuratedPoints(spec.load);
+        if (!pts || !pts.length) return null;
+        const last = pts[pts.length - 1];
+        const prev = pts.length > 1 ? pts[pts.length - 2] : null;
+        const dec = spec.dec == null ? 1 : spec.dec;
+        return {
+          name: TICKER_LABELS[spec.key] || spec.title,
+          val: fmtReading(last.v, spec.fmt, dec),
+          delta: prev ? fmtDelta(last.v - prev.v, spec.fmt, dec) : "",
+          dir: prev ? (last.v - prev.v < 0 ? "down" : "up") : "up",
+          period: axisLabel(last.t)
+        };
+      } catch (err) { console.error("ticker", spec.key, err); return null; }
+    })).then(list => {
+      const clean = list.filter(Boolean);
+      if (alive && clean.length) setItems(clean);
+    });
+    return () => { alive = false; };
+  }, []);
+  return items;
+}
+
 function Ticker({ content }) {
   const conf = (content && content.ticker) || {};
-  const base = (conf.items && conf.items.length) ? conf.items : SERIES.map(s => ({ name: s.title, val: s.last, delta: s.delta }));
-  const items = base.map(it => ({ ...it, dir: String(it.delta || "").trim().startsWith("-") ? "down" : "up" }));
+  const live = useLiveTicker();
+  const fallback = (conf.items && conf.items.length) ? conf.items : SERIES.map(s => ({ name: s.title, val: s.last, delta: s.delta }));
+  const base = live || fallback;
+  const items = base.map(it => ({ ...it, dir: it.dir || (String(it.delta || "").trim().startsWith("-") ? "down" : "up") }));
   const seg = (k) => (
     <div className="ticker-seg" key={k} aria-hidden={k === 1 ? "true" : undefined}>
       {items.map(it => (
         <span className="tk-item" key={`${k}-${it.name}`}>
           <span className="tk-name">{it.name}</span>
           <span className="tk-val num">{it.val}</span>
-          <span className={`tk-delta num ${it.dir}`}>{it.delta}</span>
+          {it.delta && <span className={`tk-delta num ${it.dir}`}>{it.delta}</span>}
+          {it.period && <span className="tk-period">{it.period}</span>}
         </span>
       ))}
     </div>
@@ -1747,7 +1807,7 @@ const CURATED = [
     freq:"Anual", unitLabel:"PIB corriente en millones de US$", fmt:"usdM", dec:0, sign:"normal",
     blurb:"El tamaño absoluto de la economía en dólares. Es la vara con la que se miden la deuda, el gasto y la inversión: todo ratio de política pública (deuda/PIB, presión tributaria) se lee contra esta cifra.",
     src:"BCRD · Cuentas nacionales", srcUrl:"https://www.bancentral.gov.do/a/d/2533-sector-real",
-    load:{ kind:"local", id:"CE-SER-2026-0040", variable:"PIB Corriente (Millones de US$)" } },
+    load:{ kind:"local", id:"CE-SER-2026-0040", variable:"PIB Corriente (Millones de US$)", minAbs:1000 } },
 
   { key:"ocupados", panel:"do", theme:"Actividad y crecimiento", title:"Ocupados totales",
     freq:"Trimestral", unitLabel:"Personas ocupadas", fmt:"persons", dec:0, sign:"normal",
@@ -1756,10 +1816,10 @@ const CURATED = [
     load:{ kind:"local", id:"CE-SER-2026-0011", variable:"Total" } },
 
   { key:"inflacion", panel:"do", theme:"Precios y política monetaria", title:"Inflación subyacente",
-    freq:"Mensual", unitLabel:"Variación % interanual", fmt:"pct", dec:1, sign:"invert",
+    freq:"Anual · diciembre", unitLabel:"Variación % interanual (dic./dic.)", fmt:"pct", dec:1, sign:"invert",
     blurb:"La inflación que ve el Banco Central. La subyacente excluye alimentos y combustibles volátiles y revela la presión de precios de fondo: es la que guía las decisiones de tasa. La meta oficial es 4% ± 1%.",
     src:"BCRD · Precios (IPC)", srcUrl:"https://www.bancentral.gov.do/a/d/2529-precios",
-    load:{ kind:"local", id:"CE-SER-2026-0028", variable:"IPC | Subyacente", transform:"yoy", lag:12 } },
+    load:{ kind:"local", id:"CE-SER-2026-0028", variable:"Inflación Subyacente | Acumulada" } },
 
   { key:"tpm", panel:"do", theme:"Precios y política monetaria", title:"Tasa de política monetaria",
     freq:"Mensual", unitLabel:"% anual", fmt:"pct", dec:2, sign:"neutral",
@@ -1801,7 +1861,8 @@ const CURATED = [
     freq:"Mensual", unitLabel:"Pasajeros llegados", fmt:"persons", dec:0, sign:"normal",
     blurb:"El motor de divisas número uno. La llegada de pasajeros vía aérea es el indicador adelantado del turismo, sector que sostiene reservas, empleo y buena parte de la construcción del país.",
     src:"BCRD · Sector turismo", srcUrl:"https://www.bancentral.gov.do/a/d/2536-sector-turismo",
-    load:{ kind:"local", id:"CE-SER-2026-0031", variable:"pasajeros_via_aerea_total_columna" } },
+    load:{ kind:"local", id:"CE-SER-2026-0031", variable:"pasajeros_via_aerea",
+           where:[{ field:"category", value:"Total Pasajeros" }, { field:"component", value:"Total" }] } },
 
   { key:"deuda_pib", panel:"do", theme:"Fiscal y deuda", title:"Deuda pública consolidada",
     freq:"Anual", unitLabel:"% del PIB", fmt:"pct", dec:1, sign:"invert",
@@ -1968,14 +2029,20 @@ function axisLabel(t) {
 }
 
 /* ---- Cargadores unificados: master local, FRED y Yahoo Finance ---- */
-async function loadLocalPoints({ id, variable, aggregate, where }) {
+async function loadLocalPoints({ id, variable, aggregate, where, minAbs }) {
   const r = await fetch("data/series/" + id + ".json", { cache: "no-store" });
   if (!r.ok) throw new Error("HTTP " + r.status);
   const data = await r.json();
+  // `where` acepta un filtro o una lista de filtros {field, value}: algunas
+  // hojas necesitan dos columnas para aislar el total (p. ej. turismo).
+  const conds = where ? (Array.isArray(where) ? where : [where]) : [];
   const rows = (data.observations || [])
     .filter(o => (variable ? o.variable === variable : true))
-    .filter(o => (where ? o[where.field] === where.value : true))
-    .filter(o => o.value != null && !isNaN(+o.value));
+    .filter(o => conds.every(c => o[c.field] === c.value))
+    .filter(o => o.value != null && !isNaN(+o.value))
+    // Algunas hojas del master mezclan el nivel y su tasa de variación bajo la
+    // misma variable y fecha; minAbs se queda con el nivel.
+    .filter(o => (minAbs == null ? true : Math.abs(+o.value) >= minAbs));
   if (aggregate === "sum") {
     const m = new Map();
     for (const o of rows) {
@@ -2390,6 +2457,8 @@ function ResearchPapersBody({ toast, onSubmit, repo = [] }) {
   const topics = useMemo(() => ["Todos", ...Array.from(new Map(papers.map(p => [p.topic, p.topicLabel])).values()).sort()], [papers]);
   const types = useMemo(() => ["Todos", ...Array.from(new Set(papers.map(p => p.type).filter(Boolean))).sort()], [papers]);
   const sources = useMemo(() => ["Todas", ...Array.from(new Set(papers.map(p => p.source).filter(Boolean))).sort()], [papers]);
+  const PAGE = 24;
+  const [shown, setShown] = useState(PAGE);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return papers.filter(p => {
@@ -2400,6 +2469,8 @@ function ResearchPapersBody({ toast, onSubmit, repo = [] }) {
       return matchesQuery && matchesTopic && matchesType && matchesSource;
     });
   }, [papers, query, topic, type, source]);
+  useEffect(() => { setShown(PAGE); }, [query, topic, type, source]);
+  const visible = filtered.slice(0, shown);
   const openPaper = (paper) => {
     const url = paper.source_url || paper.handle;
     if (!url) { toast("Este paper no tiene enlace disponible todavía"); return; }
@@ -2422,11 +2493,11 @@ function ResearchPapersBody({ toast, onSubmit, repo = [] }) {
           </div>
         </div>
       </div>
-      <div className="paper-summary">{loading ? "Cargando catálogo curado..." : <React.Fragment><b>{filtered.length}</b> de <b>{papers.length}</b> papers curados. Abre la fuente original al hacer clic.</React.Fragment>}</div>
+      <div className="paper-summary">{loading ? "Cargando catálogo curado..." : <React.Fragment>Mostrando <b>{visible.length}</b> de <b>{filtered.length}</b> papers{filtered.length !== papers.length ? <React.Fragment> (filtrados de {papers.length})</React.Fragment> : null}. Abre la fuente original al hacer clic.</React.Fragment>}</div>
       <div className="research-list">
         {loading && <div className="paper-empty">Preparando repositorio de investigación...</div>}
         {!loading && filtered.length === 0 && <div className="paper-empty">No hay papers con esos filtros.</div>}
-        {filtered.map(r => (
+        {visible.map(r => (
           <a key={r.id} href={r.source_url || r.handle || "#"} className="research-row" onClick={(e)=>{e.preventDefault();openPaper(r);}}>
             <div className="research-year">{r.year}</div>
             <div className="research-main">
@@ -2443,6 +2514,11 @@ function ResearchPapersBody({ toast, onSubmit, repo = [] }) {
           </a>
         ))}
       </div>
+      {filtered.length > visible.length && (
+        <div className="paper-more">
+          <button className="chip" onClick={()=>setShown(n => n + PAGE)}>Ver más papers ({filtered.length - visible.length} restantes) {Ico.arr()}</button>
+        </div>
+      )}
       <div className="submit-row">
         <p><b>¿Tienes un trabajo de investigación?</b> Envía título, abstracto, datos, sector, archivos y fuente vinculada. Pasará a una cola formal distinta a los comentarios de Blog.</p>
         <button className="chip" onClick={()=>setOpenSubmit(true)}>Enviar una propuesta {Ico.arr()}</button>
@@ -2507,8 +2583,8 @@ function AdminBody({ toast, queue, jobQueue=[], audit, refresh, onLogout, conten
   const publishOpinion = async (item) => {
     addOpinion(item);
     const res = await db.upsertOpinion(item);
-    if (res.ok) toast("Opinión publicada");
-    else if (res.offline) toast("Opinión publicada localmente · backend no configurado");
+    if (res.ok) toast("Opinión publicada para todos");
+    else if (res.offline) toast("Opinión guardada en este navegador · inicia sesión Supabase para publicarla para todos");
     else toast(res.msg || "Opinión guardada localmente; Supabase no la registró");
   };
 
@@ -2801,7 +2877,7 @@ function OpinionesBoard({ opiniones = [] }) {
             <div className="opinion-strip-photo">
               {item.photo
                 ? <img className="opinion-photo" src={item.photo} alt={item.author} />
-                : <span className="opinion-initials">{(item.author || "?").split(/\s+/).slice(0,2).map(w=>w[0]).join("")}</span>}
+                : <span className="opinion-initials">{(item.author || "?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("")}</span>}
             </div>
             <div className="opinion-strip-text">
               <span className="opinion-byline">{item.author}</span>
@@ -2879,7 +2955,7 @@ function AdminOpinionForm({ toast, onPublish }) {
           <div className="opinion-strip-photo">
             {form.photo
               ? <img className="opinion-photo" src={form.photo} alt="" />
-              : <span className="opinion-initials">{(form.author || "?").split(/\s+/).slice(0,2).map(w=>w[0]).join("")}</span>}
+              : <span className="opinion-initials">{(form.author || "?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("")}</span>}
           </div>
           <div className="opinion-strip-text">
             <span className="opinion-byline">{form.author || "Economista invitado"}</span>
@@ -3587,6 +3663,7 @@ function SiteEditor({ content, onChange, toast }) {
       <details className="editor-group">
         <summary>Ticker de indicadores</summary>
         <div className="editor-group-body form-grid">
+          <p className="admin-note" style={{gridColumn:"1 / -1"}}>La franja muestra el último dato publicado de cada indicador, leído en vivo del master. Estos campos solo se usan como respaldo si esa carga falla.</p>
           <EField content={content} set={set} label="Etiqueta fija" path="ticker.tag" full />
           {content.ticker.items.map((it, i) => (
             <React.Fragment key={i}>

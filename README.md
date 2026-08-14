@@ -60,6 +60,11 @@ formateada (con su unidad real) y enlace a la fuente. Se organiza en dos paneles
   VIX, S&P 500 y Bitcoin vía **FRED** (`fredgraph.csv`, sin API key); oro vía
   **Yahoo Finance** (`chart` API).
 
+La **franja de indicadores** (ticker) no lleva cifras escritas a mano: lee el último
+dato publicado de ocho indicadores (`TICKER_KEYS`) con el mismo cargador de
+Estadísticas y calcula la variación contra la observación anterior. Los campos del
+editor del sitio quedan solo como respaldo si esa carga falla.
+
 Cada indicador declara su `load` (`kind: local | fred | yahoo | imf`), su formato
 (`fmt`), su signo semántico (`sign`) y transformaciones opcionales (`scale`,
 `aggregate`, `where`, `transform: "yoy"`). Los cargadores viven en `loadLocalPoints`
