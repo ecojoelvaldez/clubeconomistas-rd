@@ -65,6 +65,23 @@ dato publicado de ocho indicadores (`TICKER_KEYS`) con el mismo cargador de
 Estadísticas y calcula la variación contra la observación anterior. Los campos del
 editor del sitio quedan solo como respaldo si esa carga falla.
 
+### Últimos datos publicados que el master aún no trae
+El master de `data/series/` se regenera desde los archivos oficiales y va uno o
+varios rezagos por detrás de los comunicados de la propia fuente. La constante
+`ULTIMOS_PUBLICADOS` de `index.html` recoge esas lecturas ya publicadas y
+`withPublishedTail()` las añade al final de la serie **solo si son posteriores al
+último dato del master**; cuando el master se regenere y las alcance, dejan de
+usarse sin tocar nada. Los valores van en la unidad que muestra el sitio (después
+de `scale`) y la ficha del indicador lo advierte con una nota bajo el gráfico.
+
+Al 31 de agosto de 2026 cubre: IMAE (may–jul 2026), ocupados (ENCFT ene–mar 2026),
+TPM (jun–ago 2026), tipo de cambio (cotizaciones de referencia hasta el 28 de
+agosto), reservas brutas (may–jul), remesas (abr–jul) y recaudación DGII (abr–jul).
+Se mantienen en el master, sin cola, los indicadores cuyo dato reciente no publica
+la fuente en su comunicado mensual (tasa activa, mercado primario SIMV) o cuyo
+concepto no coincide con el del comunicado (turismo: el master mide el total de
+pasajeros y el BCRD comunica solo los no residentes).
+
 Cada indicador declara su `load` (`kind: local | fred | yahoo | imf`), su formato
 (`fmt`), su signo semántico (`sign`) y transformaciones opcionales (`scale`,
 `aggregate`, `where`, `transform: "yoy"`). Los cargadores viven en `loadLocalPoints`

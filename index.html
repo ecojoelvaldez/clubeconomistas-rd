@@ -399,6 +399,8 @@
   .series-source { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; font-size: 12px; color: var(--azul-50); }
   .series-source a { color: var(--ce-gold-dim); border-bottom: 1px solid var(--oro-20); }
   .series-source a:hover { color: var(--ce-ink); border-color: var(--ce-ink); }
+  .series-note { font-family: var(--ce-body); font-size: 12.5px; line-height: 1.55; color: var(--azul-50); margin: 14px 0 0; padding-left: 12px; border-left: 2px solid var(--oro-20); }
+  .series-note b { color: var(--azul-70); font-weight: 600; }
   .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ce-gold-dim); border: 1px solid var(--oro-20); padding: 3px 8px; }
   .live-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ce-gold); box-shadow: 0 0 0 0 rgba(194,163,86,.6); animation: livePulse 2s infinite; }
   @keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(194,163,86,.55); } 70% { box-shadow: 0 0 0 7px rgba(194,163,86,0); } 100% { box-shadow: 0 0 0 0 rgba(194,163,86,0); } }
@@ -1029,17 +1031,21 @@ const LOGO_CIRCLE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAAFoCAYAA
 const LOGO_CE = "data:image/png;base64,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";
 
 /* ============================== DATOS ============================== */
+/* Cinco indicadores de portada con su última lectura publicada por la fuente
+   (BCRD, DGII) al cierre de agosto de 2026. Respaldan la franja de indicadores
+   si falla la carga del master y alimentan el selector de datos del laboratorio.
+   Se actualizan a mano; la franja y Estadísticas leen el dato real. */
 const SERIES = [
-  { code:"CE-MAC-2026-001", title:"IMAE", full:"Índice Mensual de Actividad Económica", source:"BCRD", freq:"Mensual", unit:"Var. % interanual", last:"4.8", delta:"+0.3", dir:"up", updated:"Abr 2026",
-    data:[{t:"Nov",v:3.9},{t:"Dic",v:4.1},{t:"Ene",v:4.3},{t:"Feb",v:4.2},{t:"Mar",v:4.5},{t:"Abr",v:4.8}] },
-  { code:"CE-MON-2026-002", title:"Tasa de Política Monetaria", full:"TPM — tasa de referencia del BCRD", source:"BCRD", freq:"Mensual", unit:"% anual", last:"6.00", delta:"-0.25", dir:"down", updated:"May 2026",
-    data:[{t:"Dic",v:7.00},{t:"Ene",v:6.75},{t:"Feb",v:6.50},{t:"Mar",v:6.50},{t:"Abr",v:6.25},{t:"May",v:6.00}] },
-  { code:"CE-FX-2026-003", title:"Tipo de Cambio", full:"Tasa de venta promedio USD/DOP", source:"BCRD", freq:"Diaria", unit:"DOP por USD", last:"60.42", delta:"+0.18", dir:"up", updated:"31 May 2026",
-    data:[{t:"Ene",v:59.1},{t:"Feb",v:59.4},{t:"Mar",v:59.8},{t:"Abr",v:60.1},{t:"May",v:60.42}] },
-  { code:"CE-PRC-2026-004", title:"Inflación", full:"IPC — variación interanual", source:"BCRD", freq:"Mensual", unit:"Var. % interanual", last:"3.6", delta:"-0.1", dir:"down", updated:"Abr 2026",
-    data:[{t:"Nov",v:4.2},{t:"Dic",v:4.0},{t:"Ene",v:3.9},{t:"Feb",v:3.8},{t:"Mar",v:3.7},{t:"Abr",v:3.6}] },
-  { code:"CE-BNK-2026-005", title:"Crédito EIF", full:"Crédito al sector privado — sistema financiero", source:"SIB", freq:"Mensual", unit:"Var. % interanual", last:"11.2", delta:"+0.6", dir:"up", updated:"Mar 2026",
-    data:[{t:"Oct",v:9.8},{t:"Nov",v:10.1},{t:"Dic",v:10.4},{t:"Ene",v:10.6},{t:"Feb",v:10.6},{t:"Mar",v:11.2}] },
+  { code:"CE-MAC-2026-001", title:"IMAE", full:"Índice Mensual de Actividad Económica", source:"BCRD", freq:"Mensual", unit:"Var. % interanual", last:"4.6", delta:"-1.8", dir:"down", updated:"Jul 2026",
+    data:[{t:"Feb",v:3.9},{t:"Mar",v:5.1},{t:"Abr",v:3.8},{t:"May",v:4.7},{t:"Jun",v:6.4},{t:"Jul",v:4.6}] },
+  { code:"CE-MON-2026-002", title:"Tasa de Política Monetaria", full:"TPM — tasa de referencia del BCRD", source:"BCRD", freq:"Mensual", unit:"% anual", last:"5.25", delta:"0.00", dir:"flat", updated:"Ago 2026",
+    data:[{t:"Mar",v:5.25},{t:"Abr",v:5.25},{t:"May",v:5.25},{t:"Jun",v:5.25},{t:"Jul",v:5.25},{t:"Ago",v:5.25}] },
+  { code:"CE-FX-2026-003", title:"Tipo de Cambio", full:"Tasa de venta promedio USD/DOP", source:"BCRD", freq:"Diaria", unit:"DOP por USD", last:"58.92", delta:"+0.26", dir:"up", updated:"28 Ago 2026",
+    data:[{t:"Mar",v:61.19},{t:"Abr",v:60.10},{t:"May",v:58.70},{t:"Jun",v:58.87},{t:"Jul",v:58.66},{t:"Ago",v:58.92}] },
+  { code:"CE-PRC-2026-004", title:"Inflación", full:"IPC — variación interanual", source:"BCRD", freq:"Mensual", unit:"Var. % interanual", last:"5.47", delta:"-0.20", dir:"down", updated:"Jul 2026",
+    data:[{t:"Mar",v:4.63},{t:"Abr",v:5.11},{t:"May",v:5.35},{t:"Jun",v:5.67},{t:"Jul",v:5.47}] },
+  { code:"CE-FIS-2026-005", title:"Recaudación DGII", full:"Recaudación efectiva de Impuestos Internos", source:"DGII", freq:"Mensual", unit:"Millones de RD$", last:"81,475", delta:"+6,268", dir:"up", updated:"Jul 2026",
+    data:[{t:"Mar",v:78102.5},{t:"Abr",v:116555.9},{t:"May",v:78703.8},{t:"Jun",v:75207.4},{t:"Jul",v:81475.1}] },
 ];
 
 const RESEARCH = [
@@ -1610,7 +1616,7 @@ function useLiveTicker() {
       .filter(Boolean);
     Promise.all(specs.map(async spec => {
       try {
-        const pts = await loadCuratedPoints(spec.load);
+        const pts = await loadCuratedPoints(spec.load, spec.key);
         if (!pts || !pts.length) return null;
         const last = pts[pts.length - 1];
         const prev = pts.length > 1 ? pts[pts.length - 2] : null;
@@ -2019,6 +2025,8 @@ function axisLabel(t) {
   if (t == null) return "";
   const s = String(t);
   if (/^\d{4}$/.test(s)) return s;                 // anual
+  const q = s.match(/^(\d{4})-Q([1-4])$/);          // trimestral: 2026-Q1 -> T1 26
+  if (q) return "T" + q[2] + " " + q[1].slice(2);
   const p = s.split("-");
   if (p.length >= 2) {
     const yy = p[0].slice(2);
@@ -2110,7 +2118,85 @@ async function loadImfPoints({ imfId, iso = "DOM" }) {
   return out;
 }
 
-async function loadCuratedPoints(load) {
+/* ---- Últimos datos publicados que el master todavía no incorpora ----
+   El master de `data/series/` se regenera desde los archivos oficiales (BCRD,
+   DGII, SIMV, Hacienda) y va uno o varios rezagos por detrás de los comunicados
+   de la propia fuente. Esta tabla recoge esas lecturas ya publicadas, en la
+   unidad que muestra el sitio (después de `scale`), y se añaden al final de la
+   serie SOLO si son posteriores al último dato del master: cuando el master se
+   regenere y las alcance, dejan de usarse sin tocar nada.
+   Cada punto: t = período tal como lo etiqueta la serie, d = fecha para ordenar. */
+const ULTIMOS_PUBLICADOS = {
+  imae: {
+    nota: "El último dato es el IMAE de julio de 2026 (4.6 % interanual; 4.5 % acumulado enero-julio), publicado por el BCRD el 25 de agosto de 2026.",
+    points: [
+      { t:"2026-05", d:"2026-05-01", v:4.7 },
+      { t:"2026-06", d:"2026-06-01", v:6.4 },
+      { t:"2026-07", d:"2026-07-01", v:4.6 }
+    ]
+  },
+  ocupados: {
+    nota: "El último dato es la ENCFT del trimestre enero-marzo de 2026: 5,236,178 ocupados, 118,631 más que un año antes.",
+    points: [ { t:"2026-Q1", d:"2026-03-31", v:5236178 } ]
+  },
+  tpm: {
+    nota: "La TPM sigue en 5.25 % anual: el BCRD la mantuvo sin cambios en sus reuniones de junio, julio y agosto de 2026.",
+    points: [
+      { t:"2026-06", d:"2026-06-01", v:5.25 },
+      { t:"2026-07", d:"2026-07-01", v:5.25 },
+      { t:"2026-08", d:"2026-08-01", v:5.25 }
+    ]
+  },
+  fx: {
+    nota: "Las últimas cotizaciones son las tasas de referencia diarias publicadas por el BCRD hasta el 28 de agosto de 2026.",
+    points: [
+      { t:"2026-07-14", d:"2026-07-14", v:59.1185 },
+      { t:"2026-07-20", d:"2026-07-20", v:58.7316 },
+      { t:"2026-07-25", d:"2026-07-25", v:58.5070 },
+      { t:"2026-07-30", d:"2026-07-30", v:58.6604 },
+      { t:"2026-08-26", d:"2026-08-26", v:58.5044 },
+      { t:"2026-08-28", d:"2026-08-28", v:58.9172 }
+    ]
+  },
+  reservas: {
+    nota: "El último dato es el cierre de julio de 2026: US$15,253.0 millones, equivalentes a 10.8 % del PIB y 5.5 meses de importaciones.",
+    points: [
+      { t:"2026-05", d:"2026-05-01", v:15771.1 },
+      { t:"2026-06", d:"2026-06-01", v:15821.6 },
+      { t:"2026-07", d:"2026-07-01", v:15253.0 }
+    ]
+  },
+  remesas: {
+    nota: "El último dato es julio de 2026: US$1,097.1 millones, para un acumulado de US$7,316.4 millones entre enero y julio (+6.4 % interanual).",
+    points: [
+      { t:"2026-04", d:"2026-04-01", v:1060.3 },
+      { t:"2026-05", d:"2026-05-01", v:1090.2 },
+      { t:"2026-06", d:"2026-06-01", v:1049.3 },
+      { t:"2026-07", d:"2026-07-01", v:1097.1 }
+    ]
+  },
+  recaudacion: {
+    nota: "El último dato es julio de 2026: RD$81,475.1 millones, 6.5 % más que en julio de 2025, según el informe mensual de la DGII.",
+    points: [
+      { t:"2026-04-01", d:"2026-04-01", v:116555.9 },
+      { t:"2026-05-01", d:"2026-05-01", v:78703.8 },
+      { t:"2026-06-01", d:"2026-06-01", v:75207.4 },
+      { t:"2026-07-01", d:"2026-07-01", v:81475.1 }
+    ]
+  }
+};
+
+// Añade al final de la serie los datos ya publicados por la fuente que quedan
+// después del último punto del master. Si el master ya llegó ahí, no hace nada.
+function withPublishedTail(key, pts) {
+  const extra = key && ULTIMOS_PUBLICADOS[key];
+  if (!extra || !extra.points.length) return pts;
+  const lastD = pts.length ? String(pts[pts.length - 1]._d || pts[pts.length - 1].t) : "";
+  const tail = extra.points.filter(o => String(o.d) > lastD).map(o => ({ t: o.t, v: o.v, _d: o.d }));
+  return tail.length ? pts.concat(tail) : pts;
+}
+
+async function loadCuratedPoints(load, key) {
   let pts;
   if (load.kind === "local") pts = await loadLocalPoints(load);
   else if (load.kind === "fred") pts = await loadFredPoints(load);
@@ -2128,7 +2214,7 @@ async function loadCuratedPoints(load) {
     pts = t;
   }
   if (load.scale) pts = pts.map(o => ({ t: o.t, v: o.v * load.scale, _d: o._d }));
-  return pts;
+  return withPublishedTail(key, pts);
 }
 
 function StatsBody({ toast, initialTheme, onSubChange }) {
@@ -2166,7 +2252,7 @@ function StatsBody({ toast, initialTheme, onSubChange }) {
     if (!selected) { setPoints([]); return; }
     let alive = true;
     setLoading(true); setError(null); setPoints([]);
-    loadCuratedPoints(selected.load)
+    loadCuratedPoints(selected.load, selected.key)
       .then(p => { if (alive) { setPoints(p); setLoading(false); } })
       .catch(err => { if (alive) { setError(err.message || "No se pudo cargar"); setLoading(false); } });
     return () => { alive = false; };
@@ -2182,6 +2268,9 @@ function StatsBody({ toast, initialTheme, onSubChange }) {
   const prev = points.length > 1 ? points[points.length - 2].v : null;
   const lastT = points.length ? points[points.length - 1].t : null;
   const delta = (last != null && prev != null) ? last - prev : null;
+  // ¿La última lectura viene de un comunicado de la fuente y no del master?
+  const publicado = selected ? ULTIMOS_PUBLICADOS[selected.key] : null;
+  const desdeComunicado = !!(publicado && lastT != null && publicado.points.some(o => o.t === lastT));
   const fmt = selected ? selected.fmt : "num";
   const dec = selected ? (selected.dec != null ? selected.dec : 1) : 1;
   const sign = selected ? selected.sign : "neutral";
@@ -2286,6 +2375,13 @@ function StatsBody({ toast, initialTheme, onSubChange }) {
                   <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--azul-50)", fontSize: 13 }}>Sin datos graficables.</div>
                 )}
               </div>
+
+              {desdeComunicado && !loading && !error && (
+                <p className="series-note">
+                  <b>Dato publicado por la fuente.</b> {publicado.nota} El master del Club se regenera desde los
+                  archivos oficiales y todavía no lo incorpora; el resto de la serie sale de ahí.
+                </p>
+              )}
 
               <div className="series-source">
                 <span>Fuente:</span>
